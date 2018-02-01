@@ -1,0 +1,17 @@
+# Doctr requires python >=3.5
+language: python
+python:
+    - 3.6
+
+sudo: false
+env:
+  global:
+    # Doctr deploy key for SebastianSemper/camiba
+    - secure: "FodFi8uKzr0fGo9H8rTaVJEh8Q6JwgZCmoQ9pXjy5++lr3weOWJ08w5ZFt5w7aIXYZ0LrI606GXCZvquXCy+mk0KT5/F6ye0O+mB6O6/Vjq1dOi/BIdxdyf8eQZOPWpn1A8QsniJvylrGPKZmkbK/gI3R2LB9Lo+fgd1gz0NViKg+WRczPr52+z1bll3aeX5sbqS/b2uLL9eWOK+LRw/M3hKz9POXINYOJa7R5q45lzCx83dpX/d7+YreLFVekA/vzMZGaMDWB1oCaMCdd5WtQsCxBks9chqoFFLG5KQfPqZqovDxE13gFDJc9/P/Tad0di8gr9EBHIccf3s/pSsHd8kcYV33Suta6MlZY3rmrzjP9ORKakSf8zD/AuB60PKt2cE1XJszuXj/Kh7elbvC5GDNrFLUnRvTTTB2vHdV1eBwTng1wgEudfMpy66bQdWO94fncJIzxBPKmD+1uW3X4yRMS5NjvQtyuoJm3ZJc3EZDoiLnOfS1SxWdlgRSO6ZO7GREoSBVXRJ5BomA5uhTYtKPQxxWa6DyHfbjVdzaStE4JP6fQWNu+kTgbH1eBv3azePxChRZc+D5DsRFMJr9HA8u5f2q4PVThe6O7d1b3RljDtkxqoxqeod9Kn3cYqWkiZLmRGcRtAXfaifB+X2vMqGt4TGk4ERME8xA/TVH9w="
+
+script:
+    - set -e
+    - pip install sphinx numpy scipy matplotlib
+    - python setup.py build_doc
+    - pip install doctr
+    - doctr deploy --built-docs doc/html/ .
