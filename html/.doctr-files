@@ -1,3 +1,14 @@
+html/_modules/camiba/algs/admm.html
+html/_modules/camiba/algs/iht.html
+html/_modules/camiba/algs/irls.html
+html/_modules/camiba/algs/ista.html
+html/_modules/camiba/algs/omp.html
+html/_modules/camiba/cs/scenario.html
+html/_modules/camiba/cs/soe.html
+html/_modules/camiba/linalg/basic.html
+html/_modules/camiba/linalg/pack.html
+html/_modules/camiba/linalg/vand.html
+html/_modules/index.html
 html/_sources/algs.rst.txt
 html/_sources/cs.rst.txt
 html/_sources/index.rst.txt
@@ -30,5 +41,6 @@ html/genindex.html
 html/index.html
 html/linalg.html
 html/objects.inv
+html/py-modindex.html
 html/search.html
 html/searchindex.js
