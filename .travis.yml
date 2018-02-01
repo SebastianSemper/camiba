@@ -11,7 +11,7 @@ env:
 
 script:
     - set -e
-    - pip install sphinx numpy scipy matplotlib
+    - pip install sphinx numpy scipy matplotlib numpydoc
     - python setup.py build_doc
     - pip install doctr
     - doctr deploy --built-docs doc/html/ .

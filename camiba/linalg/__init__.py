@@ -21,6 +21,10 @@ Vandermonde Matrices
 .. automodule:: camiba.linalg.vand
     :members:
 
+Multilevel Matrices
+-------------------
+.. automodule:: camiba.linalg.multilevel
+    :members:
 """
 
 from .basic import *
