@@ -1,0 +1,821 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>camiba.cs.soe &#8212; &#39;camiba&#39; 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for camiba.cs.soe</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">for EET see:</span>
+<span class="sd">http://www.eurasip.org/Proceedings/Eusipco/Eusipco2014/HTML/papers/1569925343.pdf</span>
+
+<span class="sd">for EFT see:</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy.random</span> <span class="k">as</span> <span class="nn">npr</span>
+<span class="kn">import</span> <span class="nn">numpy.linalg</span> <span class="k">as</span> <span class="nn">npl</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">..linalg.basic</span> <span class="k">import</span> <span class="n">proj_sphere</span>
+<span class="kn">from</span> <span class="nn">..linalg.basic</span> <span class="k">import</span> <span class="n">khatri_rao</span>
+<span class="kn">from</span> <span class="nn">..linalg.vand</span> <span class="k">import</span> <span class="o">*</span>
+
+<span class="kn">from</span> <span class="nn">..algs</span> <span class="k">import</span> <span class="n">omp</span>
+
+<span class="kn">from</span> <span class="nn">.scenario</span> <span class="k">import</span> <span class="n">Scenario</span>
+
+
+
+<div class="viewcode-block" id="Soe"><a class="viewcode-back" href="../../../cs.html#camiba.cs.Soe">[docs]</a><span class="k">class</span> <span class="nc">Soe</span><span class="p">(</span><span class="n">Scenario</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; specifically designed cs scenario suitable for soe &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">num_n</span><span class="p">,</span>
+            <span class="n">num_m</span><span class="p">,</span>
+            <span class="n">mos_method</span><span class="o">=</span><span class="s1">&#39;eft&#39;</span><span class="p">,</span>
+            <span class="n">algorithm</span><span class="o">=</span><span class="n">omp</span><span class="o">.</span><span class="n">recover</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+
+        <span class="c1"># save the MOS algorithm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mos_method</span> <span class="o">=</span> <span class="n">mos_method</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mos_method</span> <span class="o">==</span> <span class="s1">&#39;lopes&#39;</span><span class="p">:</span>
+
+            <span class="c1"># evenly divide the measurement</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_m1</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_m</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_m2</span> <span class="o">=</span> <span class="n">num_m</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_m1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_num_gamma</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;num_gamma&#39;</span><span class="p">]</span>
+
+            <span class="c1"># init measurement matrix</span>
+            <span class="n">matMeasurement</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_m</span><span class="p">,</span> <span class="n">num_n</span><span class="p">))</span>
+
+            <span class="c1"># generate cauchy measurements</span>
+            <span class="n">matMeasurement</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">num_m1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">npr</span><span class="o">.</span><span class="n">standard_cauchy</span><span class="p">(</span>
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_m1</span><span class="p">,</span> <span class="n">num_n</span><span class="p">)</span>
+            <span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_gamma</span>
+
+            <span class="c1"># generate gaussian measurements</span>
+            <span class="n">matMeasurement</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">num_m1</span><span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">num_m2</span><span class="p">,</span>
+                <span class="n">num_n</span>
+            <span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_gamma</span>
+
+            <span class="c1"># set appropriate estimation function</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_est_lopes</span>
+
+        <span class="k">elif</span> <span class="n">mos_method</span> <span class="o">==</span> <span class="s1">&#39;ravazzi&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_num_gamma</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;num_gamma&#39;</span><span class="p">]</span>
+            <span class="n">matUniform</span> <span class="o">=</span> <span class="n">npr</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">num_m</span><span class="p">,</span> <span class="n">num_n</span><span class="p">))</span>
+            <span class="n">matNormal</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_gamma</span><span class="p">))</span> <span class="o">*</span> \
+                <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">num_m</span><span class="p">,</span> <span class="n">num_n</span><span class="p">)</span>
+            <span class="n">matSubSel</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">matUniform</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_gamma</span><span class="p">)</span>
+
+            <span class="n">matMeasurement</span> <span class="o">=</span> <span class="n">matSubSel</span> <span class="o">*</span> <span class="n">matNormal</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_est_ravazzi</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="c1"># path to store training data to</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_path</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;str_path&#39;</span><span class="p">]</span>
+
+            <span class="c1"># overlap parameter</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_num_p</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;num_p&#39;</span><span class="p">]</span>
+
+            <span class="c1"># error probability during training</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_num_err_prob</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;num_err_prob&#39;</span><span class="p">]</span>
+
+            <span class="c1"># make scenario complex if we do overlap</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_do_complex</span> <span class="o">=</span> <span class="p">((</span><span class="n">num_p</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;do_complex&#39;</span><span class="p">]))</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_p</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+
+                <span class="c1"># find dimensions most suitable</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_largest_div</span><span class="p">(</span><span class="n">num_m</span><span class="p">)</span>
+
+                <span class="c1"># create the matrices</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_complex</span><span class="p">:</span>
+                    <span class="n">mat_psi</span> <span class="o">=</span> <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span> <span class="n">num_n</span><span class="p">)</span> <span class="o">+</span> \
+                        <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span> <span class="n">num_n</span><span class="p">)</span>
+
+                    <span class="n">mat_phi</span> <span class="o">=</span> <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_n</span><span class="p">)</span> <span class="o">+</span> \
+                        <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_n</span><span class="p">)</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">mat_psi</span> <span class="o">=</span> <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span> <span class="n">num_n</span><span class="p">)</span>
+                    <span class="n">mat_phi</span> <span class="o">=</span> <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_n</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nope_overlap</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mat_psi</span> <span class="o">=</span> <span class="n">vand</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">num_m</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_p</span><span class="p">)),</span>
+                    <span class="n">num_n</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_path</span> <span class="o">+</span> <span class="s2">&quot;vander_c&quot;</span>
+                <span class="p">)</span>
+                <span class="n">mat_phi</span> <span class="o">=</span> <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_p</span><span class="p">,</span> <span class="n">num_n</span><span class="p">)</span> <span class="o">+</span> \
+                    <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_p</span><span class="p">,</span> <span class="n">num_n</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_block_length</span><span class="p">(</span><span class="n">num_m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_p</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">num_m</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+                <span class="c1"># set appropriate estimation function</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_true_overlap</span>
+
+            <span class="c1"># measurement is the KRP of scaled KRP of vandermonde</span>
+            <span class="c1"># where we only take the first m rows</span>
+            <span class="n">matMeasurement</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">proj_sphere</span><span class="p">(</span>
+                <span class="n">krp</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">mat_psi</span><span class="p">,</span> <span class="n">mat_phi</span><span class="p">)[:</span><span class="n">num_m</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">mos_method</span> <span class="o">==</span> <span class="s1">&#39;eft&#39;</span><span class="p">:</span>
+                <span class="c1"># generate the array with the helper values</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_num_q</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_arr_r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eft_fetch_arr_r</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_num_q</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span>
+                    <span class="n">str_path</span><span class="o">+</span><span class="s2">&quot;eft_arr_r_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
+                <span class="p">)</span>
+
+                <span class="c1"># fetch the thresholding coefficients</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_arr_eta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eft_fetch_arr_eta</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span>
+                    <span class="n">num_err_prob</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_do_complex</span><span class="p">,</span>
+                    <span class="n">str_path</span> <span class="o">+</span> <span class="s2">&quot;eft_arr_eta_&quot;</span> <span class="o">+</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">num_err_prob</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_do_complex</span><span class="p">)</span> <span class="o">*</span> <span class="s2">&quot;c_&quot;</span> <span class="o">+</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
+                <span class="p">)</span> <span class="o">+</span> <span class="mf">0.4</span>
+
+            <span class="k">elif</span> <span class="n">mos_method</span> <span class="o">==</span> <span class="s1">&#39;eet&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_arr_eta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eet_fetch_arr_eta</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_num_err_prob</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_do_complex</span><span class="p">,</span>
+                    <span class="n">str_path</span> <span class="o">+</span> <span class="s2">&quot;eet_arr_eta_&quot;</span> <span class="o">+</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_err_prob</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_do_complex</span><span class="p">)</span> <span class="o">*</span> <span class="s2">&quot;c_&quot;</span> <span class="o">+</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">mos_method</span> <span class="o">==</span> <span class="s1">&#39;new&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_arr_eta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_new_fetch_arr_eta</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_num_err_prob</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_do_complex</span><span class="p">,</span>
+                    <span class="n">str_path</span> <span class="o">+</span> <span class="s2">&quot;new_arr_eta_&quot;</span> <span class="o">+</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_err_prob</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_do_complex</span><span class="p">)</span> <span class="o">*</span> <span class="s2">&quot;c_&quot;</span> <span class="o">+</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="c1"># now create the cs scenario</span>
+        <span class="n">sc</span><span class="o">.</span><span class="n">Scenario</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>						<span class="c1"># yay!</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">num_n</span><span class="p">),</span>				<span class="c1"># during soe the dictionary is the</span>
+            <span class="c1"># identity matrix, i.e. the vector</span>
+            <span class="c1"># itself is sparse</span>
+            <span class="n">matMeasurement</span><span class="p">,</span>
+            <span class="n">algorithm</span>					<span class="c1"># recovery is done with OMP</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Soe.estimate"><a class="viewcode-back" href="../../../cs.html#camiba.cs.Soe.estimate">[docs]</a>    <span class="k">def</span> <span class="nf">estimate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">arr_b</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            actual interface function that allows this class</span>
+<span class="sd">            to perform SOE given a single vector or an array of vectors</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr_b</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">apply_along_axis</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_function</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">arr_b</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_function</span><span class="p">(</span><span class="n">arr_b</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_eft_fetch_arr_r</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">num_m</span><span class="p">,</span>
+        <span class="n">num_n</span><span class="p">,</span>
+        <span class="n">str_p</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Helper function to calculate r and store r helper array&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">str_p</span><span class="o">+</span><span class="s1">&#39;.npy&#39;</span><span class="p">):</span>
+            <span class="k">return</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">str_p</span><span class="o">+</span><span class="s1">&#39;.npy&#39;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">arr_r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_m</span><span class="p">)</span>
+
+            <span class="c1"># calculate the array for every entry</span>
+            <span class="c1"># starting at value 1</span>
+            <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_m</span><span class="p">):</span>
+
+                <span class="n">num_M</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ii</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+                <span class="n">num_r_old</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">num_r_new</span> <span class="o">=</span> <span class="mi">0</span>
+
+                <span class="n">num_dim_frac</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_M</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">num_n</span><span class="p">))</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">num_n</span><span class="o">*</span><span class="n">num_M</span><span class="p">)</span>
+
+                <span class="k">while</span> <span class="nb">abs</span><span class="p">(</span><span class="n">num_r_old</span> <span class="o">-</span> <span class="n">num_r_new</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-15</span><span class="p">:</span>
+                    <span class="n">num_r_old</span> <span class="o">=</span> <span class="n">num_r_new</span>
+
+                    <span class="n">num_r_m</span> <span class="o">=</span> <span class="n">num_r_old</span><span class="o">**</span><span class="n">num_M</span>
+                    <span class="n">num_r_prod</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">num_r_m</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">num_r_old</span><span class="p">)</span>
+
+                    <span class="n">num_r_new</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">num_dim_frac</span><span class="o">*</span><span class="n">num_r_prod</span> <span class="o">-</span>
+                                  <span class="mf">1.0</span> <span class="o">-</span> <span class="n">num_r_m</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">num_r_old</span><span class="p">))</span>
+
+                <span class="n">arr_r</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_r_new</span>
+
+            <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">str_p</span><span class="o">+</span><span class="s1">&#39;.npy&#39;</span><span class="p">,</span> <span class="n">arr_r</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">arr_r</span>
+
+    <span class="k">def</span> <span class="nf">_eft_fetch_arr_eta</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">num_N</span><span class="p">,</span>
+        <span class="n">num_M</span><span class="p">,</span>
+        <span class="n">num_err_prob</span><span class="p">,</span>
+        <span class="n">doComplex</span><span class="p">,</span>
+        <span class="n">str_p</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Given dimensions and the desired probability of error, and</span>
+<span class="sd">        whether to work complex, we generate training data on noise</span>
+<span class="sd">        and save the trained coefficients in str_p&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">str_p</span><span class="o">+</span><span class="s1">&#39;.npy&#39;</span><span class="p">):</span>
+            <span class="k">return</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">str_p</span><span class="o">+</span><span class="s1">&#39;.npy&#39;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;$SOE$    Starting with EFT training...&#39;</span><span class="p">)</span>
+
+            <span class="c1"># dynamically generate enough trials</span>
+            <span class="n">num_trials</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="mf">10.0</span><span class="o">*</span><span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="n">num_err_prob</span><span class="p">)))</span>
+
+            <span class="c1"># adapt to complex case</span>
+            <span class="k">if</span> <span class="n">doComplex</span><span class="p">:</span>
+                <span class="n">ten_trials</span> <span class="o">=</span> <span class="p">(</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">num_N</span><span class="p">,</span> <span class="n">num_M</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span> <span class="o">+</span>
+                              <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">num_N</span><span class="p">,</span> <span class="n">num_M</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
+                              <span class="p">)</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ten_trials</span> <span class="o">=</span> <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">num_N</span><span class="p">,</span> <span class="n">num_M</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
+
+            <span class="c1"># generate values for eta as thresholding parameter</span>
+            <span class="n">res_eta</span> <span class="o">=</span> <span class="mi">10000</span>
+            <span class="n">grd_eta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">res_eta</span><span class="p">)</span>
+
+            <span class="c1"># matrix for storing number of false alarms</span>
+            <span class="n">mat_FA_prb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">res_eta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_q</span><span class="p">))</span>
+
+            <span class="c1"># go through all trials</span>
+            <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">ii</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">num_trials</span><span class="p">)</span><span class="o">*</span><span class="mf">0.1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;$SOE$    </span><span class="si">%d%%</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">ii</span><span class="p">)</span><span class="o">/</span><span class="n">num_trials</span><span class="o">*</span><span class="mi">100</span><span class="p">))</span>
+
+                <span class="c1"># reverse array of singular values</span>
+                <span class="n">arr_SV</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flipud</span><span class="p">(</span>
+                    <span class="n">npl</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">ten_trials</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">ii</span><span class="p">],</span>
+                            <span class="n">compute_uv</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+                <span class="p">)</span>
+
+                <span class="c1"># go through every dimension</span>
+                <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_q</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="n">jj</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">jj</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="n">num_sig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">arr_SV</span><span class="p">[</span><span class="mi">0</span><span class="p">:(</span><span class="n">jj</span><span class="o">+</span><span class="mi">1</span><span class="p">)])</span>
+                    <span class="n">num_SV_est</span> <span class="o">=</span> <span class="p">(</span><span class="n">jj</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> \
+                        <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arr_r</span><span class="p">[</span><span class="n">jj</span><span class="p">])</span>
+                         <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arr_r</span><span class="p">[</span><span class="n">jj</span><span class="p">]</span><span class="o">**</span><span class="p">(</span><span class="n">jj</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+                         <span class="p">)</span><span class="o">*</span><span class="n">num_sig</span>
+
+                    <span class="n">num_ratio</span> <span class="o">=</span> <span class="p">(</span><span class="n">arr_SV</span><span class="p">[</span><span class="n">jj</span><span class="p">]</span> <span class="o">-</span> <span class="n">num_SV_est</span><span class="p">)</span><span class="o">/</span><span class="n">num_SV_est</span>
+                    <span class="n">mat_FA_prb</span><span class="p">[</span><span class="n">num_ratio</span> <span class="o">&gt;</span> <span class="n">grd_eta</span><span class="p">,</span> <span class="n">jj</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mf">1.0</span>
+
+            <span class="c1"># normalize to probability</span>
+            <span class="n">mat_FA_prb</span> <span class="o">/=</span> <span class="nb">float</span><span class="p">(</span><span class="n">num_trials</span><span class="p">)</span>
+
+            <span class="c1"># invert the relation between eta and probability</span>
+            <span class="n">arr_eta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_q</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_q</span><span class="p">):</span>
+                <span class="n">ind_eta</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">while</span> <span class="n">mat_FA_prb</span><span class="p">[</span><span class="n">ind_eta</span><span class="p">,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">num_err_prob</span> <span class="ow">and</span> <span class="n">ind_eta</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">&lt;</span> <span class="n">res_eta</span><span class="p">:</span>
+                    <span class="n">ind_eta</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="c1"># print(mat_FA_prb[ind_eta,ii])</span>
+                <span class="n">arr_eta</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">grd_eta</span><span class="p">[</span><span class="n">ind_eta</span><span class="p">]</span>
+
+            <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">str_p</span><span class="o">+</span><span class="s1">&#39;.npy&#39;</span><span class="p">,</span> <span class="n">arr_eta</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;$SOE$    Done with EFT training...&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">arr_eta</span>
+
+    <span class="k">def</span> <span class="nf">_eet_fetch_arr_eta</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">num_N</span><span class="p">,</span>
+        <span class="n">num_M</span><span class="p">,</span>
+        <span class="n">num_err_prob</span><span class="p">,</span>
+        <span class="n">doComplex</span><span class="p">,</span>
+        <span class="n">str_p</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Given dimensions and the desired probability of error, and</span>
+<span class="sd">        whether to work complex, we generate training data on noise</span>
+<span class="sd">        and save the trained coefficients in str_p&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">str_p</span><span class="o">+</span><span class="s1">&#39;.npy&#39;</span><span class="p">):</span>
+            <span class="k">return</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">str_p</span><span class="o">+</span><span class="s1">&#39;.npy&#39;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;$SOE$    Starting with EET training...&#39;</span><span class="p">)</span>
+
+            <span class="c1"># dynamically generate enough trials</span>
+            <span class="n">num_trials</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="mf">500.0</span><span class="o">*</span><span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="n">num_err_prob</span><span class="p">)))</span>
+
+            <span class="c1"># adapt to complex case</span>
+            <span class="k">if</span> <span class="n">doComplex</span><span class="p">:</span>
+                <span class="n">mat_trials</span> <span class="o">=</span> <span class="p">(</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_numK</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span> <span class="o">+</span>
+                              <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_numK</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
+                              <span class="p">)</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mat_trials</span> <span class="o">=</span> <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_numK</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
+
+            <span class="n">num_P</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">)</span>
+
+            <span class="n">arr_sv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">num_P</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">))</span>
+            <span class="n">ten_trials</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">mat_trials</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_p</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_trials</span><span class="p">):</span>
+                    <span class="n">ten_trials</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">mat_trials</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_trials</span><span class="p">):</span>
+                    <span class="n">ten_trials</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reshape_measurement</span><span class="p">(</span>
+                        <span class="n">mat_trials</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">])</span>
+
+            <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_trials</span><span class="p">):</span>
+                <span class="n">arr_sv</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">npl</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">ten_trials</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">ii</span><span class="p">],</span> <span class="n">compute_uv</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="n">arr_quot</span> <span class="o">=</span> <span class="n">arr_sv</span><span class="p">[:(</span><span class="n">num_P</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="p">:]</span> <span class="o">/</span> <span class="n">arr_sv</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:]</span>
+
+            <span class="n">num_Q</span> <span class="o">=</span> <span class="mi">20000</span>
+            <span class="n">num_max_ratio</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">arr_quot</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">num_tau</span> <span class="o">=</span> <span class="n">num_max_ratio</span><span class="o">/</span><span class="n">num_Q</span>
+
+            <span class="n">arr_P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">num_Q</span><span class="p">)</span>
+
+            <span class="n">arr_eta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_P</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">lst_Q</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">num_Q</span><span class="p">))</span>
+
+            <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_P</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">qq</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_Q</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="n">arr_P</span><span class="p">[</span><span class="n">qq</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">arr_quot</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="p">:]</span> <span class="o">&gt;=</span> <span class="n">num_tau</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span><span class="o">*</span><span class="n">qq</span><span class="p">)</span> <span class="o">*</span>
+                        <span class="p">(</span><span class="n">arr_quot</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="p">:]</span> <span class="o">&lt;</span> <span class="n">num_tau</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">qq</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+                    <span class="p">)</span><span class="o">/</span><span class="n">num_trials</span>
+
+                <span class="n">arr_abs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">arr_P</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_err_prob</span><span class="p">))</span>
+                <span class="n">num_j_eta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">arr_abs</span><span class="p">)</span>
+                <span class="n">arr_eta</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_j_eta</span><span class="o">*</span><span class="n">num_tau</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
+
+            <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">str_p</span><span class="o">+</span><span class="s1">&#39;.npy&#39;</span><span class="p">,</span> <span class="n">arr_eta</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;$SOE$    Done with EET training...&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">arr_eta</span>
+
+    <span class="k">def</span> <span class="nf">_new_fetch_arr_eta</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">num_N</span><span class="p">,</span>
+        <span class="n">num_M</span><span class="p">,</span>
+        <span class="n">num_err_prob</span><span class="p">,</span>
+        <span class="n">doComplex</span><span class="p">,</span>
+        <span class="n">str_p</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">str_p</span><span class="o">+</span><span class="s1">&#39;.npy&#39;</span><span class="p">):</span>
+            <span class="k">return</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">str_p</span><span class="o">+</span><span class="s1">&#39;.npy&#39;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;$SOE$    Starting with NEW training...&#39;</span><span class="p">)</span>
+
+            <span class="c1"># dynamically generate enough trials</span>
+            <span class="n">num_trials</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="mf">500.0</span><span class="o">*</span><span class="mf">1.0</span><span class="o">/</span><span class="p">(</span><span class="n">num_err_prob</span><span class="p">)))</span>
+
+            <span class="c1"># adapt to complex case</span>
+            <span class="k">if</span> <span class="n">doComplex</span><span class="p">:</span>
+                <span class="n">mat_trials</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_numK</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span> <span class="o">+</span>
+                                <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_numK</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
+                                <span class="p">)</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mat_trials</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_numK</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
+
+            <span class="n">num_P</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">)</span>
+
+            <span class="n">arr_sv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">num_P</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">))</span>
+            <span class="n">ten_trials</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">mat_trials</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_p</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_trials</span><span class="p">):</span>
+                    <span class="n">ten_trials</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">mat_trials</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_trials</span><span class="p">):</span>
+                    <span class="n">ten_trials</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reshape_measurement</span><span class="p">(</span>
+                        <span class="n">mat_trials</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">])</span>
+
+            <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_trials</span><span class="p">):</span>
+                <span class="n">arr_sv</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">npl</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">ten_trials</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">ii</span><span class="p">],</span> <span class="n">compute_uv</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+
+            <span class="n">arr_ratios</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">num_P</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_P</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">arr_ratios</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">arr_sv</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="p">:]</span> <span class="o">/</span> \
+                    <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">arr_sv</span><span class="p">[(</span><span class="n">ii</span><span class="o">+</span><span class="mi">1</span><span class="p">):,</span> <span class="p">:],</span> <span class="mi">0</span><span class="p">)</span>
+
+            <span class="n">arr_eta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_P</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_P</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">arr_eta</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
+                    <span class="n">arr_ratios</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="p">:],</span> <span class="mf">50.0</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_err_prob</span><span class="p">)</span>
+                <span class="n">arr_eta</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span>
+                    <span class="n">arr_ratios</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="p">:],</span> <span class="mf">100.</span> <span class="o">-</span> <span class="mf">50.0</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_err_prob</span><span class="p">)</span>
+
+            <span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">str_p</span><span class="o">+</span><span class="s1">&#39;.npy&#39;</span><span class="p">,</span> <span class="n">arr_eta</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;$SOE$    Done with NEW training...&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">arr_eta</span>
+
+    <span class="k">def</span> <span class="nf">_reshape_measurement</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">vec_b</span>
+    <span class="p">):</span>
+        <span class="c1"># create a now empty matrix with the same datatype as into</span>
+        <span class="c1"># where we shape the input into</span>
+        <span class="n">mat_B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">),</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">vec_b</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="p">)</span>
+
+        <span class="c1"># do the reshapig with overlap</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">):</span>
+            <span class="n">mat_B</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">vec_b</span><span class="p">[(</span><span class="n">ii</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_p</span><span class="p">)</span>                                 <span class="p">:(</span><span class="n">ii</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_p</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">)]</span>
+
+        <span class="k">return</span> <span class="n">mat_B</span>
+
+    <span class="k">def</span> <span class="nf">_do_eet</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mat_B</span>
+    <span class="p">):</span>
+        <span class="n">arr_sv</span> <span class="o">=</span> <span class="n">npl</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">mat_B</span><span class="p">,</span> <span class="n">compute_uv</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr_sv</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="c1">#print((arr_sv[N-ii-2] / arr_sv[N - ii - 1]) , self._arr_eta[N-ii-2])</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">arr_sv</span><span class="p">[</span><span class="n">N</span><span class="o">-</span><span class="n">ii</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">arr_sv</span><span class="p">[</span><span class="n">N</span> <span class="o">-</span> <span class="n">ii</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arr_eta</span><span class="p">[</span><span class="n">N</span><span class="o">-</span><span class="n">ii</span><span class="o">-</span><span class="mi">2</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="n">N</span> <span class="o">-</span> <span class="n">ii</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="c1"># else:</span>
+                <span class="c1"># print(&#39;BOOOM&#39;)</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">_do_eft</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mat_B</span>
+    <span class="p">):</span>
+
+        <span class="c1"># get the singular values</span>
+        <span class="n">arr_SV</span> <span class="o">=</span> <span class="n">npl</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">mat_B</span><span class="p">,</span> <span class="n">compute_uv</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+
+        <span class="c1"># do the threshold test</span>
+        <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_q</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">jj</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">jj</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">num_sig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">arr_SV</span><span class="p">[</span><span class="mi">0</span><span class="p">:(</span><span class="n">jj</span><span class="o">+</span><span class="mi">1</span><span class="p">)])</span>
+            <span class="n">num_SV_est</span> <span class="o">=</span> <span class="n">num_SV_est</span> <span class="o">=</span> <span class="p">(</span><span class="n">jj</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> \
+                <span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arr_r</span><span class="p">[</span><span class="n">jj</span><span class="p">])</span>
+                 <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arr_r</span><span class="p">[</span><span class="n">jj</span><span class="p">]</span><span class="o">**</span><span class="p">(</span><span class="n">jj</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+                 <span class="p">)</span><span class="o">*</span><span class="n">num_sig</span>
+
+            <span class="n">num_ratio</span> <span class="o">=</span> <span class="p">(</span><span class="n">arr_SV</span><span class="p">[</span><span class="n">jj</span><span class="p">]</span> <span class="o">-</span> <span class="n">num_SV_est</span><span class="p">)</span><span class="o">/</span><span class="n">num_SV_est</span>
+
+            <span class="c1"># use training data to distinguish between noise and actual data</span>
+            <span class="k">if</span> <span class="n">num_ratio</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arr_eta</span><span class="p">[</span><span class="n">jj</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span> <span class="o">-</span> <span class="n">jj</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">_do_new</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mat_B</span>
+    <span class="p">):</span>
+
+        <span class="c1"># get the singular values</span>
+        <span class="n">arr_SV</span> <span class="o">=</span> <span class="n">npl</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">mat_B</span><span class="p">,</span> <span class="n">compute_uv</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+
+        <span class="n">num_P</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_P</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">quot</span> <span class="o">=</span> <span class="p">(</span><span class="n">arr_SV</span><span class="p">[</span><span class="n">num_P</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">ii</span><span class="p">]</span> <span class="o">/</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">arr_SV</span><span class="p">[(</span><span class="n">num_P</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">ii</span><span class="p">):]))</span>
+            <span class="k">if</span> <span class="n">quot</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arr_eta</span><span class="p">[</span><span class="n">num_P</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">ii</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="n">quot</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_arr_eta</span><span class="p">[</span><span class="n">num_P</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">ii</span><span class="p">,</span> <span class="mi">0</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="n">num_P</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">ii</span>
+
+        <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">_nope_overlap</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">vec_b</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;	estimation routine that reshapes b without</span>
+<span class="sd">            reuing any elements.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mat_B</span> <span class="o">=</span> <span class="n">vec_b</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
+
+        <span class="c1"># initiate the model order selection</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mos_method</span> <span class="o">==</span> <span class="s1">&#39;eft&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_eft</span><span class="p">(</span><span class="n">mat_B</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mos_method</span> <span class="o">==</span> <span class="s1">&#39;eet&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_eet</span><span class="p">(</span><span class="n">mat_B</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mos_method</span> <span class="o">==</span> <span class="s1">&#39;new&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_new</span><span class="p">(</span><span class="n">mat_B</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_true_overlap</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">vec_b</span>		<span class="c1"># vector to do SOE on</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            estimation routine that reshapes b by reusing some elements according to some overlap</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">mat_B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reshape_measurement</span><span class="p">(</span><span class="n">vec_b</span><span class="p">)</span>
+
+        <span class="c1"># initiate the model order selection</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mos_method</span> <span class="o">==</span> <span class="s1">&#39;eft&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_eft</span><span class="p">(</span><span class="n">mat_B</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mos_method</span> <span class="o">==</span> <span class="s1">&#39;eet&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_eet</span><span class="p">(</span><span class="n">mat_B</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mos_method</span> <span class="o">==</span> <span class="s1">&#39;new&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_new</span><span class="p">(</span><span class="n">mat_B</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_largest_div</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">num_n</span>		<span class="c1"># number to split into factors</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Calculates the largest divisor of a natural number num_n</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">num_d</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">num_n</span><span class="p">))</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">num_n</span> <span class="o">%</span> <span class="n">num_d</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">num_d</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_n</span><span class="o">/</span><span class="n">num_d</span><span class="p">))</span>
+            <span class="n">num_d</span> <span class="o">-=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">_find_block_length</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">num_m</span><span class="p">,</span>		<span class="c1"># the number of measurements we took</span>
+        <span class="n">num_p</span>		<span class="c1"># the block advance we chose</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Finds the optimal block length num_l</span>
+<span class="sd">            for given dimensions and block advance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">num_l_init</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="nb">float</span><span class="p">(</span><span class="n">num_m</span><span class="p">)</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">num_p</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="n">num_p</span><span class="o">+</span><span class="mf">1.0</span><span class="p">)))</span>
+        <span class="n">num_l1</span> <span class="o">=</span> <span class="n">num_l_init</span>
+        <span class="n">num_l2</span> <span class="o">=</span> <span class="n">num_l_init</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">num_m</span> <span class="o">-</span> <span class="n">num_l1</span><span class="p">)</span> <span class="o">%</span> <span class="n">num_p</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_l1</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">num_m</span> <span class="o">-</span> <span class="n">num_l2</span><span class="p">)</span> <span class="o">%</span> <span class="n">num_p</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_l2</span><span class="p">)</span>
+
+            <span class="n">num_l1</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">num_l2</span> <span class="o">-=</span> <span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">_est_lopes</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">vec_b</span>
+    <span class="p">):</span>
+        <span class="n">numT1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">vec_b</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_m1</span><span class="p">]))</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_gamma</span>
+        <span class="n">numT2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">vec_b</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">num_m1</span><span class="p">:]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_gamma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">numT1</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">numT2</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_est_ravazzi</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">vec_b</span>
+    <span class="p">):</span>
+        <span class="n">num_s</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="n">num_k</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="n">arr_ka</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
+        <span class="n">arr_pi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_numK</span><span class="p">,</span> <span class="n">num_s</span><span class="p">))</span>
+        <span class="n">arr_al</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
+        <span class="n">arr_be</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
+        <span class="n">arr_pe</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
+
+        <span class="n">arr_pi</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="n">arr_al</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">500</span>
+        <span class="n">arr_pe</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.01</span>
+        <span class="n">arr_be</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">200</span>
+
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_s</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="c1"># E-step</span>
+            <span class="n">q1</span> <span class="o">=</span> <span class="p">(</span><span class="n">arr_pe</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">arr_al</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span>
+            <span class="n">q2</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">arr_pe</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">arr_be</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span>
+            <span class="n">e1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span> <span class="n">vec_b</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">arr_al</span><span class="p">[</span><span class="n">ii</span><span class="p">]))</span>
+            <span class="n">e2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span> <span class="n">vec_b</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">arr_be</span><span class="p">[</span><span class="n">ii</span><span class="p">]))</span>
+            <span class="n">arr_pi</span><span class="p">[:,</span> <span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">q1</span> <span class="o">*</span> <span class="n">e1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">q1</span> <span class="o">*</span> <span class="n">e1</span> <span class="o">+</span> <span class="n">q2</span> <span class="o">*</span> <span class="n">e2</span><span class="p">)</span>
+
+            <span class="c1"># M-Step</span>
+            <span class="n">sum1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">arr_pi</span><span class="p">[:,</span> <span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">sum2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">arr_pi</span><span class="p">[:,</span> <span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">arr_pe</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">sum1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_numK</span>
+            <span class="n">arr_ka</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">arr_pe</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> \
+                <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_gamma</span><span class="p">)</span>
+
+            <span class="n">arr_al</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">arr_pi</span><span class="p">[:,</span> <span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">vec_b</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">sum1</span>
+            <span class="n">arr_be</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">arr_pi</span><span class="p">[:,</span> <span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">vec_b</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">sum2</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">arr_ka</span><span class="p">[</span><span class="n">ii</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">arr_ka</span><span class="p">[</span><span class="n">num_s</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+
+<div class="viewcode-block" id="Soe.phase_trans_est"><a class="viewcode-back" href="../../../cs.html#camiba.cs.Soe.phase_trans_est">[docs]</a>    <span class="k">def</span> <span class="nf">phase_trans_est</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                        <span class="n">num_s</span><span class="p">,</span>				<span class="c1"># fixed sparsity order</span>
+                        <span class="n">fun_x</span><span class="p">,</span>				<span class="c1"># ground truth generation</span>
+                        <span class="n">arrSNR</span><span class="p">,</span>				<span class="c1"># array for SNR range</span>
+                        <span class="n">funNoise</span><span class="p">,</span>			<span class="c1"># noise generating function</span>
+                        <span class="n">dct_fun_compare</span><span class="p">,</span>  <span class="c1"># dictionary of comparison functions</span>
+                        <span class="n">numTrials</span>			<span class="c1"># number of trials for each SNR level</span>
+                        <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            calculate a phase transition where do SOE</span>
+
+<span class="sd">            returns a dictionary with keys taken from dictionary of compare</span>
+<span class="sd">            functions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dct_res</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="n">dct_fun_compare</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">dct_res</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ii</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">arrSNR</span><span class="p">),</span>			<span class="c1"># for each snr level</span>
+                <span class="n">numTrials</span>				<span class="c1"># for each trial</span>
+            <span class="p">))})</span>
+
+        <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">snr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arrSNR</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numTrials</span><span class="p">):</span>
+
+                <span class="c1"># generate ground truth and noisy measurement</span>
+                <span class="n">arrX</span> <span class="o">=</span> <span class="n">fun_x</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
+                <span class="n">arrB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">arrX</span><span class="p">)</span> <span class="o">+</span> <span class="n">funNoise</span><span class="p">(</span><span class="n">snr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_numK</span><span class="p">)</span>
+
+                <span class="c1"># estimate the sparsity order</span>
+                <span class="n">num_s_est</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">arrB</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">kk</span> <span class="ow">in</span> <span class="n">dct_res</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">key</span> <span class="o">=</span> <span class="n">kk</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">dct_res</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">ii</span><span class="p">,</span> <span class="n">jj</span><span class="p">]</span> <span class="o">=</span> <span class="n">dct_fun_compare</span><span class="p">[</span><span class="n">key</span><span class="p">](</span>
+                        <span class="n">arrX</span><span class="p">,</span> <span class="n">num_s_est</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="n">dct_res</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">ii</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">dct_res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dct_res</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">dct_res</span></div>
+
+<div class="viewcode-block" id="Soe.phase_trans_est_rec"><a class="viewcode-back" href="../../../cs.html#camiba.cs.Soe.phase_trans_est_rec">[docs]</a>    <span class="k">def</span> <span class="nf">phase_trans_est_rec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                            <span class="n">num_s</span><span class="p">,</span>				<span class="c1"># fixed sparsity order</span>
+                            <span class="n">fun_x</span><span class="p">,</span>				<span class="c1"># ground truth generation</span>
+                            <span class="n">args</span><span class="p">,</span>				<span class="c1"># preliminary arguments</span>
+                            <span class="n">arrSNR</span><span class="p">,</span>				<span class="c1"># array for SNR range</span>
+                            <span class="n">funNoise</span><span class="p">,</span>			<span class="c1"># noise generating function</span>
+                            <span class="n">dct_fun_compare</span><span class="p">,</span>  <span class="c1"># function to compare recovery to ground truth</span>
+                            <span class="n">numTrials</span>			<span class="c1"># number of trials for each SNR level</span>
+                            <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            calculate a phase transition where we first do SOE and then</span>
+<span class="sd">            the reconstruction, which might get better with this knowledge</span>
+
+<span class="sd">            returns a dictionary with keys taken from dictionary of compare</span>
+<span class="sd">            functions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># dictionary with results</span>
+        <span class="n">dct_res</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># initialize with keys from compare function</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="n">dct_fun_compare</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">dct_res</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ii</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">arrSNR</span><span class="p">),</span>			<span class="c1"># for each snr level</span>
+                <span class="n">numTrials</span>				<span class="c1"># for each trial</span>
+            <span class="p">))})</span>
+
+        <span class="c1"># g through SNR and trials</span>
+        <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">snr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arrSNR</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numTrials</span><span class="p">):</span>
+
+                <span class="c1"># generate ground truth and noisy measurement</span>
+                <span class="n">arrX</span> <span class="o">=</span> <span class="n">fun_x</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
+                <span class="n">arrB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">arrX</span><span class="p">)</span> <span class="o">+</span> <span class="n">funNoise</span><span class="p">(</span><span class="n">snr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_numK</span><span class="p">)</span>
+
+                <span class="c1"># estimate the sparsity order</span>
+                <span class="n">num_s_est</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">arrB</span><span class="p">)</span>
+
+                <span class="c1"># add the estimated order to the params of the recovery</span>
+                <span class="c1"># TODO: update it if already present</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;num_k&#39;</span><span class="p">:</span> <span class="n">num_s_est</span><span class="p">})</span>
+
+                <span class="c1"># do recovery with estimated sparsity</span>
+                <span class="n">arr_x_est</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">recover</span><span class="p">(</span><span class="n">arrB</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+
+                <span class="c1"># write all the results into the appropriate place</span>
+                <span class="k">for</span> <span class="n">kk</span> <span class="ow">in</span> <span class="n">dct_res</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">key</span> <span class="o">=</span> <span class="n">kk</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">dct_res</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">ii</span><span class="p">,</span> <span class="n">jj</span><span class="p">]</span> <span class="o">=</span> <span class="n">dct_fun_compare</span><span class="p">[</span><span class="n">key</span><span class="p">](</span>
+                        <span class="n">arrX</span><span class="p">,</span> <span class="n">arr_x_est</span><span class="p">)</span>
+
+        <span class="c1"># calculate</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="n">dct_res</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">ii</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">dct_res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dct_res</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">dct_res</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Sebastian Semper.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

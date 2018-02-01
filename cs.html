@@ -1,0 +1,149 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Camiba – Compressed Sensing &#8212; &#39;camiba&#39; 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Camiba – Linear Algebra" href="linalg.html" />
+    <link rel="prev" title="Camiba – Algorithms" href="algs.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <span class="target" id="module-camiba.cs"><span id="cs"></span></span><div class="section" id="camiba-compressed-sensing">
+<h1>Camiba – Compressed Sensing<a class="headerlink" href="#camiba-compressed-sensing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="scenario">
+<h2>Scenario<a class="headerlink" href="#scenario" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="camiba.cs.Scenario">
+<em class="property">class </em><code class="descclassname">camiba.cs.</code><code class="descname">Scenario</code><span class="sig-paren">(</span><em>matD</em>, <em>matC</em>, <em>algo</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/cs/scenario.html#Scenario"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.cs.Scenario" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="camiba.cs.Scenario.phase_trans_rec">
+<code class="descname">phase_trans_rec</code><span class="sig-paren">(</span><em>num_s</em>, <em>fun_x</em>, <em>args</em>, <em>arrSNR</em>, <em>funNoise</em>, <em>dct_fun_compare</em>, <em>numTrials</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/cs/scenario.html#Scenario.phase_trans_rec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.cs.Scenario.phase_trans_rec" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate a phase transition where do the reconstruction</p>
+<p>returns a dictionary with keys taken from dictionary of compare
+functions</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="soe">
+<h2>Soe<a class="headerlink" href="#soe" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="camiba.cs.Soe">
+<em class="property">class </em><code class="descclassname">camiba.cs.</code><code class="descname">Soe</code><span class="sig-paren">(</span><em>num_n</em>, <em>num_m</em>, <em>mos_method='eft'</em>, <em>algorithm=&lt;function recover&gt;</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/cs/soe.html#Soe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.cs.Soe" title="Permalink to this definition">¶</a></dt>
+<dd><p>specifically designed cs scenario suitable for soe</p>
+<dl class="method">
+<dt id="camiba.cs.Soe.estimate">
+<code class="descname">estimate</code><span class="sig-paren">(</span><em>arr_b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/cs/soe.html#Soe.estimate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.cs.Soe.estimate" title="Permalink to this definition">¶</a></dt>
+<dd><p>actual interface function that allows this class
+to perform SOE given a single vector or an array of vectors</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="camiba.cs.Soe.phase_trans_est">
+<code class="descname">phase_trans_est</code><span class="sig-paren">(</span><em>num_s</em>, <em>fun_x</em>, <em>arrSNR</em>, <em>funNoise</em>, <em>dct_fun_compare</em>, <em>numTrials</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/cs/soe.html#Soe.phase_trans_est"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.cs.Soe.phase_trans_est" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate a phase transition where do SOE</p>
+<p>returns a dictionary with keys taken from dictionary of compare
+functions</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="camiba.cs.Soe.phase_trans_est_rec">
+<code class="descname">phase_trans_est_rec</code><span class="sig-paren">(</span><em>num_s</em>, <em>fun_x</em>, <em>args</em>, <em>arrSNR</em>, <em>funNoise</em>, <em>dct_fun_compare</em>, <em>numTrials</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/cs/soe.html#Soe.phase_trans_est_rec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.cs.Soe.phase_trans_est_rec" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate a phase transition where we first do SOE and then
+the reconstruction, which might get better with this knowledge</p>
+<p>returns a dictionary with keys taken from dictionary of compare
+functions</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="algs.html" title="previous chapter">Camiba – Algorithms</a></li>
+      <li>Next: <a href="linalg.html" title="next chapter">Camiba – Linear Algebra</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Sebastian Semper.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/cs.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
