@@ -1,4 +1,7 @@
 """
+Here we implement a Class, which provides different methods for sparsity order
+estimation from compressed measurements.
+
 for EET see:
 http://www.eurasip.org/Proceedings/Eusipco/Eusipco2014/HTML/papers/1569925343.pdf
 
@@ -24,7 +27,10 @@ from .scenario import Scenario
 
 class Soe(Scenario):
 
-    """ specifically designed cs scenario suitable for soe """
+    """
+    Here we implement a Class, which provides different methods for sparsity
+    order estimation from compressed measurements.
+    """
 
     def __init__(
             self,
