@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>camiba.algs.admm &#8212; &#39;camiba&#39; 0.1.0 documentation</title>
-    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/traditional.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -23,16 +23,22 @@
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
-    <link rel="search" title="Search" href="../../../search.html" />
-   
-  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
+    <link rel="search" title="Search" href="../../../search.html" /> 
   </head>
   <body>
-  
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">&#39;camiba&#39; 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
 
     <div class="document">
       <div class="documentwrapper">
@@ -40,26 +46,21 @@
           <div class="body" role="main">
             
   <h1>Source code for camiba.algs.admm</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module provides different specialiced implementations of the well known</span>
+<span class="sd">method of alternating direction multipliers [ADMM]_. Since the method</span>
+<span class="sd">is so general, many variants exist and many optimizations problems can be</span>
+<span class="sd">recast into a problem, which can be solved by a specific ADMM.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.linalg</span> <span class="k">as</span> <span class="nn">npl</span>
-<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">toeplitz</span> <span class="k">as</span> <span class="n">spToep</span>
-<span class="kn">from</span> <span class="nn">scipy.linalg</span> <span class="k">import</span> <span class="n">circulant</span> <span class="k">as</span> <span class="n">spCirc</span>
-
 <span class="kn">from</span> <span class="nn">..linalg.basic</span> <span class="k">import</span> <span class="n">soft_thrshld</span>
-
-<div class="viewcode-block" id="ToepAdj"><a class="viewcode-back" href="../../../algs.html#camiba.algs.admm.ToepAdj">[docs]</a><span class="k">def</span> <span class="nf">ToepAdj</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Calc adjoint of a single-level Toeplitz matrix</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-        <span class="n">u</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">A</span><span class="p">[:(</span><span class="n">n</span><span class="o">-</span><span class="n">ii</span><span class="p">),</span> <span class="n">ii</span><span class="p">:])</span>
-    <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*=</span> <span class="o">.</span><span class="mi">5</span>
-    <span class="k">return</span> <span class="n">u</span></div>
+<span class="kn">from</span> <span class="nn">..linalg.multilevel</span> <span class="k">import</span> <span class="o">*</span>
 
 
-<div class="viewcode-block" id="BPDN_1D"><a class="viewcode-back" href="../../../algs.html#camiba.algs.admm.BPDN_1D">[docs]</a><span class="k">def</span> <span class="nf">BPDN_1D</span><span class="p">(</span>
+<div class="viewcode-block" id="bpdn_1d"><a class="viewcode-back" href="../../../algs.html#camiba.algs.admm.bpdn_1d">[docs]</a><span class="k">def</span> <span class="nf">bpdn_1d</span><span class="p">(</span>
     <span class="n">A</span><span class="p">,</span>              <span class="c1"># system matrix</span>
     <span class="n">b</span><span class="p">,</span>              <span class="c1"># measurements</span>
     <span class="n">x_init</span><span class="p">,</span>         <span class="c1"># inital iterate</span>
@@ -96,7 +97,7 @@
     <span class="k">return</span> <span class="n">z</span></div>
 
 
-<div class="viewcode-block" id="ANM_LSE_1D"><a class="viewcode-back" href="../../../algs.html#camiba.algs.admm.ANM_LSE_1D">[docs]</a><span class="k">def</span> <span class="nf">ANM_LSE_1D</span><span class="p">(</span>
+<div class="viewcode-block" id="anm_lse_1d"><a class="viewcode-back" href="../../../algs.html#camiba.algs.admm.anm_lse_1d">[docs]</a><span class="k">def</span> <span class="nf">anm_lse_1d</span><span class="p">(</span>
     <span class="n">A</span><span class="p">,</span>          <span class="c1"># compression matrix</span>
     <span class="n">AH</span><span class="p">,</span>         <span class="c1"># A^H</span>
     <span class="n">AHA</span><span class="p">,</span>        <span class="c1"># A^H * A</span>
@@ -157,21 +158,106 @@
         <span class="n">Lb</span> <span class="o">+=</span> <span class="n">rho</span> <span class="o">*</span> <span class="p">(</span><span class="n">Z</span> <span class="o">-</span> <span class="n">T</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">T</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="p">:</span><span class="n">L</span><span class="p">],</span> <span class="n">t</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="calcW"><a class="viewcode-back" href="../../../algs.html#camiba.algs.admm.calcW">[docs]</a><span class="k">def</span> <span class="nf">calcW</span><span class="p">(</span><span class="n">arrD</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate Weighting Matrix in Derivative</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">tenW</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="o">*</span><span class="n">arrD</span><span class="p">,))</span>
+    <span class="k">return</span> <span class="n">_calcWrec</span><span class="p">(</span><span class="n">arrD</span><span class="p">,</span> <span class="n">tenW</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_calcWrec</span><span class="p">(</span><span class="n">arrD</span><span class="p">,</span> <span class="n">tenW</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Recursion Function in Weight Matrix Calculation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># number of dimensions in current level</span>
+    <span class="n">numD</span> <span class="o">=</span> <span class="n">arrD</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># get size of resulting block toeplitz matrix</span>
+    <span class="n">prdD0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">arrD</span><span class="p">)</span>
+
+    <span class="c1"># get an array of all partial sequential products</span>
+    <span class="c1"># starting at the front</span>
+    <span class="n">prdD1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">arrD</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="n">arrF</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">arrD</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">arrD</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">arrF</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="n">arrD</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">numD</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">nn</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">arrD</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">_calcWrec</span><span class="p">(</span><span class="n">arrD</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">tenW</span><span class="p">[</span><span class="n">nn</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">arrD</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">tenW</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">*=</span> <span class="n">arrF</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">anm_lse_nd</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">AH</span><span class="p">,</span> <span class="n">AHA</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">arrD</span><span class="p">):</span>
+
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">promote_types</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="n">K</span><span class="p">,</span> <span class="n">L</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="c1"># number of dimensions</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">arrD</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="n">I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>
+    <span class="n">e1</span> <span class="o">=</span> <span class="o">-</span><span class="n">L</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span> <span class="o">*</span> <span class="p">(</span><span class="n">tau</span> <span class="o">/</span> <span class="n">rho</span><span class="p">)</span> <span class="o">*</span> <span class="n">I</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">rhoInv</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">rho</span>
+    <span class="n">tauHalf</span> <span class="o">=</span> <span class="o">-.</span><span class="mi">5</span> <span class="o">*</span> <span class="n">tau</span>
+
+    <span class="n">AHy</span> <span class="o">=</span> <span class="n">AH</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">Inv</span> <span class="o">=</span> <span class="n">npl</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">AHA</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">I</span><span class="p">)</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">L</span><span class="p">),</span> <span class="n">dtype</span><span class="p">)</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="o">*</span><span class="n">arrD</span><span class="p">,),</span> <span class="n">dtype</span><span class="p">)</span>
+
+    <span class="n">T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="p">)</span>
+
+    <span class="n">Lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="p">)</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="p">)</span>
+
+    <span class="n">Winv</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">calcW</span><span class="p">(</span><span class="n">arrD</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="n">Z</span><span class="p">[</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">]</span> <span class="o">+</span> <span class="n">rhoInv</span> <span class="o">*</span> <span class="p">(</span><span class="n">Lb</span><span class="p">[</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">]</span> <span class="o">+</span> <span class="n">tauHalf</span><span class="p">)</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Inv</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
+                <span class="n">AHy</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">Lb</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">]</span> <span class="o">+</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">Z</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">])</span>
+            <span class="p">)</span>
+
+        <span class="n">u</span> <span class="o">=</span> <span class="n">Winv</span> <span class="o">*</span> <span class="p">(</span>
+                <span class="n">ToepAdj</span><span class="p">(</span><span class="n">arrD</span><span class="p">,</span> <span class="n">Z</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="p">:</span><span class="n">L</span><span class="p">]</span> <span class="o">+</span> <span class="n">rhoInv</span> <span class="o">*</span> <span class="n">Lb</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="p">:</span><span class="n">L</span><span class="p">])</span> <span class="o">+</span> <span class="n">e1</span>
+            <span class="p">)</span>
+
+        <span class="n">T</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="p">:</span><span class="n">L</span><span class="p">]</span> <span class="o">=</span> <span class="n">Toep</span><span class="p">(</span><span class="n">arrD</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+        <span class="n">T</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="n">T</span><span class="p">[</span><span class="n">L</span><span class="p">,</span> <span class="p">:</span><span class="n">L</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">T</span><span class="p">[</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span>
+
+        <span class="n">Zspec</span><span class="p">,</span> <span class="n">Zbase</span> <span class="o">=</span> <span class="n">npl</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">T</span> <span class="o">-</span> <span class="n">rhoInv</span> <span class="o">*</span> <span class="n">Lb</span><span class="p">)</span>
+
+        <span class="n">arrPos</span> <span class="o">=</span> <span class="p">(</span><span class="n">Zspec</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">Z</span> <span class="o">=</span> <span class="n">Zbase</span><span class="p">[:,</span> <span class="n">arrPos</span><span class="p">]</span><span class="o">.</span><span class="n">dot</span><span class="p">((</span><span class="n">Zspec</span><span class="p">[</span><span class="n">arrPos</span><span class="p">]</span> <span class="o">*</span> <span class="n">Zbase</span><span class="p">[:,</span> <span class="n">arrPos</span><span class="p">]</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">Z</span> <span class="o">+</span> <span class="n">Z</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span>
+
+        <span class="n">Lb</span> <span class="o">+=</span> <span class="n">rho</span> <span class="o">*</span> <span class="p">(</span><span class="n">Z</span> <span class="o">-</span> <span class="n">T</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Toep</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">t</span><span class="p">)</span>
 </pre></div>
 
           </div>
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../../../index.html">Documentation overview</a><ul>
-  <li><a href="../../index.html">Module code</a><ul>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
+        <div class="sphinxsidebarwrapper">
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="../../../search.html" method="get">
@@ -186,17 +272,22 @@
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="footer">
-      &copy;2018, Sebastian Semper.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
-      
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">&#39;camiba&#39; 0.1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
     </div>
-
-    
-
-    
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Sebastian Semper.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.6.
+    </div>
   </body>
 </html>

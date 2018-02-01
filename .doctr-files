@@ -6,6 +6,7 @@
 ./_modules/camiba/cs/scenario.html
 ./_modules/camiba/cs/soe.html
 ./_modules/camiba/linalg/basic.html
+./_modules/camiba/linalg/multilevel.html
 ./_modules/camiba/linalg/pack.html
 ./_modules/camiba/linalg/vand.html
 ./_modules/index.html
@@ -14,12 +15,10 @@
 ./_sources/index.rst.txt
 ./_sources/linalg.rst.txt
 ./_static/ajax-loader.gif
-./_static/alabaster.css
 ./_static/basic.css
 ./_static/comment-bright.png
 ./_static/comment-close.png
 ./_static/comment.png
-./_static/custom.css
 ./_static/doctools.js
 ./_static/down-pressed.png
 ./_static/down.png
@@ -30,6 +29,7 @@
 ./_static/plus.png
 ./_static/pygments.css
 ./_static/searchtools.js
+./_static/traditional.css
 ./_static/underscore-1.3.1.js
 ./_static/underscore.js
 ./_static/up-pressed.png
