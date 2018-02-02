@@ -12,17 +12,13 @@ for EFT see:
 import numpy as np
 import numpy.random as npr
 import numpy.linalg as npl
-
 import os
 
 from ..linalg.basic import proj_sphere
 from ..linalg.basic import khatri_rao
 from ..linalg.vand import *
-
 from ..algs import omp
-
 from .scenario import Scenario
-
 
 
 class Soe(Scenario):
