@@ -47,17 +47,40 @@
             
   <h1>Source code for camiba.algs.irls</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="sd">&quot;&quot;&quot;implements the algorithm of iteratively reweighted least squares</span>
-<span class="sd">    for approximating a solution to a l_0-minimization problem&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Implements the algorithm of iteratively reweighted least squares</span>
+<span class="sd">for approximating a solution to a l_0-minimization problem, which reads as</span>
+
+<span class="sd">min ||x||_0 s.t. Ax = b</span>
+
+<span class="sd">for given matrix A and vector b and it is described and analyzed in [IRLS]_.</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.linalg</span> <span class="k">as</span> <span class="nn">npl</span>
 
 
 <div class="viewcode-block" id="recover"><a class="viewcode-back" href="../../../algs.html#camiba.algs.irls.recover">[docs]</a><span class="k">def</span> <span class="nf">recover</span><span class="p">(</span><span class="n">mat_A</span><span class="p">,</span> <span class="n">arr_b</span><span class="p">,</span> <span class="n">num_eps</span><span class="p">,</span> <span class="n">num_s</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;do the recovery with given system matrix mat_A,</span>
-<span class="sd">        given measurement arr_b with parameter num_eps</span>
-<span class="sd">        and &quot;sparsity order&quot; num_s.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Iteratively Reweighted Least Squares</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    mat_A : ndarray</span>
+<span class="sd">        system matrix</span>
+<span class="sd">    arr_b : ndarray</span>
+<span class="sd">        measurement vector</span>
+<span class="sd">    num_eps : float</span>
+<span class="sd">        stopping criterion</span>
+<span class="sd">    num_steps : int</span>
+<span class="sd">        iteration steps</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray</span>
+<span class="sd">        estimated sparse solution</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">num_s</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
     <span class="n">num_n</span><span class="p">,</span> <span class="n">num_m</span> <span class="o">=</span> <span class="n">mat_A</span><span class="o">.</span><span class="n">shape</span>
@@ -67,9 +90,9 @@
     <span class="n">arr_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">num_m</span><span class="p">)</span>
     <span class="n">arr_x_o</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_m</span><span class="p">)</span>
 
-    <span class="n">num_steps</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">num_s</span> <span class="o">=</span> <span class="mi">0</span>
 
-    <span class="k">while</span> <span class="n">npl</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">arr_x</span> <span class="o">-</span> <span class="n">arr_x_o</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.000001</span> <span class="ow">and</span> <span class="n">num_steps</span> <span class="o">&lt;</span> <span class="mi">15</span><span class="p">:</span>
+    <span class="k">while</span> <span class="n">npl</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">arr_x</span> <span class="o">-</span> <span class="n">arr_x_o</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">num_eps</span> <span class="ow">and</span> <span class="n">num_s</span> <span class="o">&lt;</span> <span class="n">num_steps</span><span class="p">:</span>
         <span class="n">mat_D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="mf">1.0</span><span class="o">/</span><span class="n">arr_w</span><span class="p">)</span>
         <span class="n">arr_x_o</span> <span class="o">=</span> <span class="n">arr_x</span>
         <span class="n">arr_x</span> <span class="o">=</span> <span class="n">mat_D</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">LA</span><span class="o">.</span><span class="n">H</span><span class="p">(</span><span class="n">mat_A</span><span class="p">))</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>

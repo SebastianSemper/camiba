@@ -54,7 +54,6 @@
 
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">csv</span>
-<span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.linalg</span> <span class="k">as</span> <span class="nn">npl</span>
 <span class="kn">import</span> <span class="nn">numpy.random</span> <span class="k">as</span> <span class="nn">npr</span>
@@ -62,7 +61,20 @@
 
 <div class="viewcode-block" id="hard_thrshld"><a class="viewcode-back" href="../../../linalg.html#camiba.linalg.basic.hard_thrshld">[docs]</a><span class="k">def</span> <span class="nf">hard_thrshld</span><span class="p">(</span><span class="n">arr_x</span><span class="p">,</span> <span class="n">num_k</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        hard thresholds a vector to a certain level</span>
+<span class="sd">        Hard Thresholding</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    arr_x : ndarray</span>
+<span class="sd">        vector to threshold</span>
+<span class="sd">    num_k : int</span>
+<span class="sd">        thresholding parameter</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray</span>
+<span class="sd">        thresholded vector</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">sort</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">arr_x</span><span class="p">))</span>
@@ -72,7 +84,20 @@
 
 <div class="viewcode-block" id="soft_thrshld"><a class="viewcode-back" href="../../../linalg.html#camiba.linalg.basic.soft_thrshld">[docs]</a><span class="k">def</span> <span class="nf">soft_thrshld</span><span class="p">(</span><span class="n">arr_x</span><span class="p">,</span> <span class="n">num_alpha</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        soft thresholds a vector to a certain level</span>
+<span class="sd">        Soft Thresholding</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    arr_x : ndarray</span>
+<span class="sd">        vector to threshold</span>
+<span class="sd">    num_k : int</span>
+<span class="sd">        thresholding parameter</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray</span>
+<span class="sd">        thresholded vector</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">arr_sig</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">arr_x</span><span class="p">)</span>
@@ -205,7 +230,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">arr_n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
-        <span class="n">arr_n</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">arr_n</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
 
     <span class="k">return</span><span class="p">(((</span><span class="n">arr_n</span><span class="o">*</span><span class="n">X</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">arr_n</span><span class="o">*</span><span class="n">X</span><span class="p">))</span></div>
 
@@ -240,6 +265,25 @@
     <span class="n">x_txt</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">tt</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">tt</span><span class="p">),</span> <span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
     <span class="n">x_txt</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x_txt</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">x_txt</span></div>
+
+
+<span class="k">def</span> <span class="nf">T1_dist_l2</span><span class="p">(</span><span class="n">phi</span><span class="p">,</span> <span class="n">phihat</span><span class="p">):</span>
+    <span class="n">phi1</span> <span class="o">=</span> <span class="n">phi</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">phi2</span> <span class="o">=</span> <span class="n">phihat</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="n">D1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">phi1</span> <span class="o">-</span> <span class="n">phi2</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+    <span class="n">D2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">phi2</span> <span class="o">-</span> <span class="n">phi1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+
+    <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">D1</span><span class="p">,</span> <span class="n">D2</span><span class="p">)</span>
+
+    <span class="n">err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">minInd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">D</span><span class="p">),</span> <span class="n">D</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">err</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="n">minInd</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">minInd</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">minInd</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">),</span> <span class="n">minInd</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">npl</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">err</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
 </pre></div>
 
           </div>

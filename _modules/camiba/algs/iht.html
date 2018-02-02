@@ -47,8 +47,14 @@
             
   <h1>Source code for camiba.algs.iht</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="sd">&quot;&quot;&quot;provides the iterative hard thresholding algorithm to approximate a solution</span>
-<span class="sd">    to the l_0-minimization problem.&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Provides the Iterative Hard Thresholding Algorithm to approximate a solution</span>
+<span class="sd">to the l_0-minimization problem, which reads as</span>
+
+<span class="sd">min ||x||_0 s.t. Ax = b</span>
+
+<span class="sd">for given matrix A and vector b and it is described and analyzed in [IHT]_.</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.linalg</span> <span class="k">as</span> <span class="nn">npl</span>
@@ -62,20 +68,42 @@
     <span class="n">num_maxsteps</span><span class="p">,</span>
     <span class="n">num_k</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;IHT Algorithm for matrix mat_A and vector arr_b&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        IHT Algorithm</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    mat_A : ndarray</span>
+<span class="sd">        system matrix</span>
+<span class="sd">    arr_b : ndarray</span>
+<span class="sd">        measurement vector</span>
+<span class="sd">    num_steps : int</span>
+<span class="sd">        iteration steps</span>
+<span class="sd">    num_k : int</span>
+<span class="sd">        thresholding parameter</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray</span>
+<span class="sd">        estimated sparse solution</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># initialize a first solution</span>
     <span class="n">arr_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">mat_A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
+    <span class="c1"># calculate step size</span>
     <span class="n">num_max_ev</span> <span class="o">=</span> <span class="n">npl</span><span class="o">.</span><span class="n">svd</span><span class="p">((</span><span class="n">mat_A</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mat_A</span><span class="p">),</span> <span class="n">compute_uv</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span>
     <span class="n">num_t</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">num_max_ev</span>
 
-    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_maxsteps</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">):</span>
 
         <span class="n">arr_residual</span> <span class="o">=</span> <span class="n">mat_A</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">arr_x</span><span class="p">)</span> <span class="o">-</span> <span class="n">arr_b</span>
 
-        <span class="n">arr_x</span> <span class="o">=</span> <span class="n">hard_thrshld</span><span class="p">(</span><span class="n">arr_x</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">num_t</span> \
-            <span class="o">*</span> <span class="p">(</span><span class="n">mat_A</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">arr_residual</span><span class="p">),</span> <span class="n">num_k</span><span class="p">)</span>
+        <span class="n">arr_x</span> <span class="o">=</span> <span class="n">hard_thrshld</span><span class="p">(</span>
+                <span class="n">arr_x</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">num_t</span> <span class="o">*</span> <span class="p">(</span><span class="n">mat_A</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">arr_residual</span><span class="p">),</span>
+                <span class="n">num_k</span>
+                <span class="p">)</span>
     <span class="k">return</span> <span class="n">arr_x</span></div>
 </pre></div>
 

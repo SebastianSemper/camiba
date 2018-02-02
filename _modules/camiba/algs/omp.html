@@ -47,8 +47,14 @@
             
   <h1>Source code for camiba.algs.omp</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="sd">&quot;&quot;&quot;provides the orthogonal matching pursuit to approximate a solution</span>
-<span class="sd">    to the l_0-minimization problem.&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Provides the Orthogonal Matching Pursuit Algorithm to approximate a solution</span>
+<span class="sd">to the l_0-minimization problem, which reads as</span>
+
+<span class="sd">min ||x||_0 s.t. Ax = b</span>
+
+<span class="sd">for given matrix A and vector b and it is described and analyzed in [OMP]_.</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.linalg</span> <span class="k">as</span> <span class="nn">npl</span>
@@ -57,10 +63,26 @@
 <div class="viewcode-block" id="recover"><a class="viewcode-back" href="../../../algs.html#camiba.algs.omp.recover">[docs]</a><span class="k">def</span> <span class="nf">recover</span><span class="p">(</span>
     <span class="n">mat_A</span><span class="p">,</span>
     <span class="n">arr_b</span><span class="p">,</span>
-    <span class="n">num_k</span><span class="p">,</span>
+    <span class="n">num_steps</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;do the recovery for matrix mat_A, measurement</span>
-<span class="sd">    arr_b for a given number of steps&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Orthogonal Matching Pursuit Algorithm</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    mat_A : ndarray</span>
+<span class="sd">        system matrix</span>
+<span class="sd">    arr_b : ndarray</span>
+<span class="sd">        measurement vector</span>
+<span class="sd">    num_steps : int</span>
+<span class="sd">        iteration steps</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray</span>
+<span class="sd">        estimated sparse solution</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">dt_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">promote_types</span><span class="p">(</span><span class="n">arr_b</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">mat_a</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
 
@@ -74,7 +96,7 @@
     <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dt_type</span><span class="p">)</span>
     <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dt_type</span><span class="p">)</span>
 
-    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_k</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">):</span>
 
         <span class="c1"># calc correlation</span>
         <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">((</span><span class="n">arr_b</span> <span class="o">-</span> <span class="n">mat_A</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">))))</span><span class="o">/</span><span class="n">arr_d</span>

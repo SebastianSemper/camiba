@@ -47,34 +47,62 @@
             
   <h1>Source code for camiba.algs.ista</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="sd">&quot;&quot;&quot;provides the iterative shrinkage thresholding algorithm to approximate a solution</span>
-<span class="sd">    to the l_0-minimization problem.&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Implements the algorithm of iterative soft thresholding</span>
+<span class="sd">for approximating a solution to a l_1-minimization problem, which reads as</span>
 
+<span class="sd">min ||x||_a + lambda * ||Ax - b||_2^2</span>
+
+<span class="sd">for given matrix A and vector b and it is described and analyzed in [ISTA]_.</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">..linalg.basic</span> <span class="k">import</span> <span class="n">soft_thrshld</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.linalg</span> <span class="k">as</span> <span class="nn">npl</span>
 
-<div class="viewcode-block" id="recover"><a class="viewcode-back" href="../../../algs.html#camiba.algs.ista.recover">[docs]</a><span class="k">def</span> <span class="nf">recover</span><span class="p">(</span><span class="n">mat_A</span><span class="p">,</span> <span class="n">arr_b</span><span class="p">,</span> <span class="n">x_init</span><span class="p">,</span> <span class="n">num_lambda</span><span class="p">,</span> <span class="n">num_maxsteps</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;ISTA Algorithm for matrix mat_A and vector arr_b&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="recover"><a class="viewcode-back" href="../../../algs.html#camiba.algs.ista.recover">[docs]</a><span class="k">def</span> <span class="nf">recover</span><span class="p">(</span><span class="n">mat_A</span><span class="p">,</span> <span class="n">arr_b</span><span class="p">,</span> <span class="n">x_init</span><span class="p">,</span> <span class="n">num_lambda</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Iterative Soft Thresholding Algorithm</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    mat_A : ndarray</span>
+<span class="sd">        system matrix</span>
+<span class="sd">    arr_b : ndarray</span>
+<span class="sd">        measurement vector</span>
+<span class="sd">    x_init : ndarray</span>
+<span class="sd">        initial solution guess</span>
+<span class="sd">    num_lambda : int</span>
+<span class="sd">        thresholding parameter</span>
+<span class="sd">    num_steps : int</span>
+<span class="sd">        iteration steps</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray</span>
+<span class="sd">        estimated sparse solution</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># initialize a first solution</span>
     <span class="n">arr_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">x_init</span><span class="p">)</span>
 
+    <span class="c1"># estimate optimal step size</span>
     <span class="n">num_max_ev</span> <span class="o">=</span> <span class="n">npl</span><span class="o">.</span><span class="n">svd</span><span class="p">((</span><span class="n">mat_A</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mat_A</span><span class="p">),</span> <span class="n">compute_uv</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span>
 
     <span class="c1"># do the iteration</span>
     <span class="n">num_t</span> <span class="o">=</span> <span class="mf">1.0</span><span class="o">/</span><span class="n">num_max_ev</span>
 
-    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_maxsteps</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">):</span>
 
         <span class="n">arr_residual</span> <span class="o">=</span> <span class="n">mat_A</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">arr_x</span><span class="p">)</span> <span class="o">-</span> <span class="n">arr_b</span>
         <span class="n">residual</span> <span class="o">=</span> <span class="n">npl</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">arr_residual</span><span class="p">)</span>
 
         <span class="n">residual_last</span> <span class="o">=</span> <span class="n">residual</span>
 
-        <span class="n">arr_x</span> <span class="o">=</span> <span class="n">soft_thrshld</span><span class="p">(</span><span class="n">arr_x</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">num_t</span> <span class="o">*</span>
-                        <span class="p">(</span><span class="n">mat_A</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">arr_residual</span><span class="p">),</span> <span class="n">num_t</span><span class="o">*</span><span class="n">num_lambda</span><span class="p">)</span>
+        <span class="n">arr_x</span> <span class="o">=</span> <span class="n">soft_thrshld</span><span class="p">(</span>
+            <span class="n">arr_x</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">num_t</span> <span class="o">*</span> <span class="p">(</span><span class="n">mat_A</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">arr_residual</span><span class="p">),</span>
+            <span class="n">num_t</span> <span class="o">*</span> <span class="n">num_lambda</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">arr_x</span></div>
 </pre></div>
 

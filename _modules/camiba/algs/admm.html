@@ -60,16 +60,37 @@
 <span class="kn">from</span> <span class="nn">..linalg.multilevel</span> <span class="k">import</span> <span class="o">*</span>
 
 
-<div class="viewcode-block" id="bpdn_1d"><a class="viewcode-back" href="../../../algs.html#camiba.algs.admm.bpdn_1d">[docs]</a><span class="k">def</span> <span class="nf">bpdn_1d</span><span class="p">(</span>
-    <span class="n">A</span><span class="p">,</span>              <span class="c1"># system matrix</span>
-    <span class="n">b</span><span class="p">,</span>              <span class="c1"># measurements</span>
-    <span class="n">x_init</span><span class="p">,</span>         <span class="c1"># inital iterate</span>
-    <span class="n">rho</span><span class="p">,</span>            <span class="c1"># parameter of augmented lagrangian</span>
-    <span class="n">alpha</span><span class="p">,</span>          <span class="c1"># thresholding parameter</span>
-    <span class="n">num_maxsteps</span>    <span class="c1"># maximum number of steps</span>
-<span class="p">):</span>
+<div class="viewcode-block" id="bpdn_1d"><a class="viewcode-back" href="../../../algs.html#camiba.algs.admm.bpdn_1d">[docs]</a><span class="k">def</span> <span class="nf">bpdn_1d</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x_init</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Basis Pursuit Denoising</span>
+
+<span class="sd">    For given matrix A, vector b and z &gt; 0, ADDM approximates a solution to</span>
+
+<span class="sd">    min ||x||_1 s.t. ||A * x - b||_2 &lt; z.</span>
+
+<span class="sd">    The algorithm needs a thresholding parameter, an initial guess for a</span>
+<span class="sd">    solution and a parameter for the augmented lagrangian.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    A : ndarray</span>
+<span class="sd">        system matrix</span>
+<span class="sd">    b : ndarray</span>
+<span class="sd">        measurement vector</span>
+<span class="sd">    x_init : ndarray</span>
+<span class="sd">        initial solution guess</span>
+<span class="sd">    rho : float</span>
+<span class="sd">        parameter for augmented lagrangian</span>
+<span class="sd">    alpha : float</span>
+<span class="sd">        thresholding parameter</span>
+<span class="sd">    num_steps : int</span>
+<span class="sd">        number of steps</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ndarray</span>
+<span class="sd">        approximated solution to BPDN</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">numN</span><span class="p">,</span> <span class="n">numM</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
 
@@ -86,7 +107,7 @@
     <span class="n">x_hat</span> <span class="o">=</span> <span class="n">alpha</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">alpha</span><span class="p">)</span><span class="o">*</span><span class="n">z</span>
     <span class="n">u</span> <span class="o">=</span> <span class="n">u</span> <span class="o">+</span> <span class="p">(</span><span class="n">x_hat</span> <span class="o">-</span> <span class="n">z</span><span class="p">)</span>
 
-    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_maxsteps</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_steps</span><span class="p">):</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">z</span><span class="o">-</span><span class="n">u</span><span class="p">)</span> <span class="o">+</span> <span class="n">q</span>
 
         <span class="n">x_hat</span> <span class="o">=</span> <span class="n">alpha</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">alpha</span><span class="p">)</span><span class="o">*</span><span class="n">z</span>
@@ -97,30 +118,52 @@
     <span class="k">return</span> <span class="n">z</span></div>
 
 
-<div class="viewcode-block" id="anm_lse_1d"><a class="viewcode-back" href="../../../algs.html#camiba.algs.admm.anm_lse_1d">[docs]</a><span class="k">def</span> <span class="nf">anm_lse_1d</span><span class="p">(</span>
-    <span class="n">A</span><span class="p">,</span>          <span class="c1"># compression matrix</span>
-    <span class="n">AH</span><span class="p">,</span>         <span class="c1"># A^H</span>
-    <span class="n">AHA</span><span class="p">,</span>        <span class="c1"># A^H * A</span>
-    <span class="n">y</span><span class="p">,</span>          <span class="c1"># measurements</span>
-    <span class="n">rho</span><span class="p">,</span>        <span class="c1"># augmented lagrangian parameter</span>
-    <span class="n">tau</span><span class="p">,</span>        <span class="c1"># regularization parameter</span>
-    <span class="n">steps</span>       <span class="c1"># maximum number of steps</span>
-<span class="p">):</span>
+<div class="viewcode-block" id="anm_lse_1d"><a class="viewcode-back" href="../../../algs.html#camiba.algs.admm.anm_lse_1d">[docs]</a><span class="k">def</span> <span class="nf">anm_lse_1d</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">AH</span><span class="p">,</span> <span class="n">AHA</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Atomic Norm Denoising for 1D Line Spectral Estimation</span>
 
+<span class="sd">    This ADMM approximates a solution to</span>
 
+<span class="sd">    min_[x,u,t] 1/(2n) trace T(u) + 1/2 t</span>
+<span class="sd">    s.t.</span>
+<span class="sd">    [[T(u), x], [x^H, t]] &gt;= 0, ||b - Ax||_2 &lt; z</span>
+
+<span class="sd">    for given matrix A, vector b and z &gt; 0. Moreover, T(u) maps the vector</span>
+<span class="sd">    u to a Hermitian Toeplitz matrix defined by u.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    A : ndarray</span>
+<span class="sd">        system matrix</span>
+<span class="sd">    AH : ndarray</span>
+<span class="sd">        Hermitian transpose of system matrix</span>
+<span class="sd">    AHA : ndarray</span>
+<span class="sd">        Gram matrix of system matrix</span>
+<span class="sd">    b : ndarray</span>
+<span class="sd">        measurement vector</span>
+<span class="sd">    rho : float</span>
+<span class="sd">        parameter for augmented lagrangian</span>
+<span class="sd">    alpha : float</span>
+<span class="sd">        thresholding parameter</span>
+<span class="sd">    num_steps : int</span>
+<span class="sd">        number of steps</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (ndarray, ndarray, ndarray)</span>
+<span class="sd">        x, T(u), t</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">promote_types</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
 
     <span class="n">K</span><span class="p">,</span> <span class="n">L</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
 
-    <span class="n">I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>
-    <span class="n">e1</span> <span class="o">=</span> <span class="o">-</span><span class="n">L</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span> <span class="o">*</span> <span class="p">(</span><span class="n">tau</span> <span class="o">/</span> <span class="n">rho</span><span class="p">)</span> <span class="o">*</span> <span class="n">I</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">mat_eye</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>
+    <span class="n">e1</span> <span class="o">=</span> <span class="o">-</span><span class="n">L</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span> <span class="o">*</span> <span class="p">(</span><span class="n">tau</span> <span class="o">/</span> <span class="n">rho</span><span class="p">)</span> <span class="o">*</span> <span class="n">mat_eye</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">rhoInv</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">rho</span>
     <span class="n">tauHalf</span> <span class="o">=</span> <span class="o">-.</span><span class="mi">5</span> <span class="o">*</span> <span class="n">tau</span>
 
-    <span class="n">Inv</span> <span class="o">=</span> <span class="n">npl</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">AHA</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">I</span><span class="p">)</span>
+    <span class="n">Inv</span> <span class="o">=</span> <span class="n">npl</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">AHA</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">mat_eye</span><span class="p">)</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">L</span><span class="p">),</span> <span class="n">dtype</span><span class="p">)</span>
     <span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
@@ -132,12 +175,12 @@
     <span class="n">Winv</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">L</span><span class="p">))</span>
     <span class="n">Winv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2.</span> <span class="o">/</span> <span class="n">L</span>
 
-    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_steps</span><span class="p">):</span>
 
         <span class="n">t</span> <span class="o">=</span> <span class="n">Z</span><span class="p">[</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">]</span> <span class="o">+</span> <span class="n">rhoInv</span> <span class="o">*</span> <span class="p">(</span><span class="n">Lb</span><span class="p">[</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">]</span> <span class="o">+</span> <span class="n">tauHalf</span><span class="p">)</span>
 
         <span class="n">x</span> <span class="o">=</span> <span class="n">Inv</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
-            <span class="n">AH</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">Lb</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">]</span> <span class="o">+</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">Z</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">])</span>
+            <span class="n">AH</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">Lb</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">]</span> <span class="o">+</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">Z</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">])</span>
         <span class="p">)</span>
 
         <span class="n">u</span> <span class="o">=</span> <span class="n">Winv</span> <span class="o">*</span> <span class="p">(</span>
@@ -160,69 +203,112 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">T</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="p">:</span><span class="n">L</span><span class="p">],</span> <span class="n">t</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="calcW"><a class="viewcode-back" href="../../../algs.html#camiba.algs.admm.calcW">[docs]</a><span class="k">def</span> <span class="nf">calcW</span><span class="p">(</span><span class="n">arrD</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_calc_w</span><span class="p">(</span><span class="n">arr_d</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate Weighting Matrix in Derivative</span>
+
+<span class="sd">    This is needed in anm_lse_nd to generate the diagonal of a weighting</span>
+<span class="sd">    matrix during the gradient decent step.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">tenW</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="o">*</span><span class="n">arrD</span><span class="p">,))</span>
-    <span class="k">return</span> <span class="n">_calcWrec</span><span class="p">(</span><span class="n">arrD</span><span class="p">,</span> <span class="n">tenW</span><span class="p">)</span></div>
+    <span class="n">ten_w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="o">*</span><span class="n">arr_d</span><span class="p">,))</span>
+    <span class="k">return</span> <span class="n">_calc_wrec</span><span class="p">(</span><span class="n">arr_d</span><span class="p">,</span> <span class="n">ten_w</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_calcWrec</span><span class="p">(</span><span class="n">arrD</span><span class="p">,</span> <span class="n">tenW</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_calc_wrec</span><span class="p">(</span><span class="n">arr_d</span><span class="p">,</span> <span class="n">ten_w</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Recursion Function in Weight Matrix Calculation</span>
+
+<span class="sd">    This is a recursive function used in _calc_w.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># number of dimensions in current level</span>
-    <span class="n">numD</span> <span class="o">=</span> <span class="n">arrD</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">num_d</span> <span class="o">=</span> <span class="n">arr_d</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="c1"># get size of resulting block toeplitz matrix</span>
-    <span class="n">prdD0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">arrD</span><span class="p">)</span>
+    <span class="n">prdD0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">arr_d</span><span class="p">)</span>
 
     <span class="c1"># get an array of all partial sequential products</span>
     <span class="c1"># starting at the front</span>
-    <span class="n">prdD1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">arrD</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="n">prdD1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">arr_d</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
 
-    <span class="n">arrF</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">arrD</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">arrD</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="n">arrF</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="n">arrD</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">arrF</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">arr_d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">arr_d</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">arrF</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="n">arr_d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-    <span class="k">if</span> <span class="n">numD</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">nn</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">arrD</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-            <span class="n">_calcWrec</span><span class="p">(</span><span class="n">arrD</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">tenW</span><span class="p">[</span><span class="n">nn</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">num_d</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">nn</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">arr_d</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">_calc_wrec</span><span class="p">(</span><span class="n">arr_d</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">ten_w</span><span class="p">[</span><span class="n">nn</span><span class="p">])</span>
 
-    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">arrD</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-        <span class="n">tenW</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">*=</span> <span class="n">arrF</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">arr_d</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">ten_w</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">*=</span> <span class="n">arrF</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">anm_lse_nd</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">AH</span><span class="p">,</span> <span class="n">AHA</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">steps</span><span class="p">,</span> <span class="n">arrD</span><span class="p">):</span>
+<div class="viewcode-block" id="anm_lse_nd"><a class="viewcode-back" href="../../../algs.html#camiba.algs.admm.anm_lse_nd">[docs]</a><span class="k">def</span> <span class="nf">anm_lse_nd</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">AH</span><span class="p">,</span> <span class="n">AHA</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">,</span> <span class="n">arr_d</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Atomic Norm Denoising for 1D Line Spectral Estimation</span>
 
+<span class="sd">    This ADMM approximates a solution to</span>
+
+<span class="sd">    min_[x,u,t] 1/(2n) trace T(u) + 1/2 t</span>
+<span class="sd">    s.t.</span>
+<span class="sd">    [[T(u), x], [x^H, t]] &gt;= 0, ||b - Ax||_2 &lt; z</span>
+<span class="sd">    </span>
+<span class="sd">    for given matrix A, vector b and z &gt; 0. Moreover, T(u) maps the tensor of</span>
+<span class="sd">    order l u to a l-level Hermitian Toeplitz matrix defined by u.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    A : ndarray</span>
+<span class="sd">        system matrix</span>
+<span class="sd">    AH : ndarray</span>
+<span class="sd">        Hermitian transpose of system matrix</span>
+<span class="sd">    AHA : ndarray</span>
+<span class="sd">        Gram matrix of system matrix</span>
+<span class="sd">    b : ndarray</span>
+<span class="sd">        measurement vector</span>
+<span class="sd">    rho : float</span>
+<span class="sd">        parameter for augmented lagrangian</span>
+<span class="sd">    alpha : float</span>
+<span class="sd">        thresholding parameter</span>
+<span class="sd">    num_steps : int</span>
+<span class="sd">        number of steps</span>
+<span class="sd">    arr_d : ndarray</span>
+<span class="sd">        dimension sizes</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    (ndarray, ndarray, ndarray)</span>
+<span class="sd">        x, T(u), t</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># detect datatype</span>
     <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">promote_types</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
 
+    <span class="c1"># extract the shaped</span>
     <span class="n">K</span><span class="p">,</span> <span class="n">L</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
 
     <span class="c1"># number of dimensions</span>
-    <span class="n">D</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">arrD</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr_d</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
-    <span class="n">I</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>
-    <span class="n">e1</span> <span class="o">=</span> <span class="o">-</span><span class="n">L</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span> <span class="o">*</span> <span class="p">(</span><span class="n">tau</span> <span class="o">/</span> <span class="n">rho</span><span class="p">)</span> <span class="o">*</span> <span class="n">I</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">mat_eye</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">L</span><span class="p">)</span>
+    <span class="n">e1</span> <span class="o">=</span> <span class="o">-</span><span class="n">L</span> <span class="o">*</span> <span class="o">.</span><span class="mi">5</span> <span class="o">*</span> <span class="p">(</span><span class="n">tau</span> <span class="o">/</span> <span class="n">rho</span><span class="p">)</span> <span class="o">*</span> <span class="n">mat_eye</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">rhoInv</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">rho</span>
     <span class="n">tauHalf</span> <span class="o">=</span> <span class="o">-.</span><span class="mi">5</span> <span class="o">*</span> <span class="n">tau</span>
 
     <span class="n">AHy</span> <span class="o">=</span> <span class="n">AH</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-    <span class="n">Inv</span> <span class="o">=</span> <span class="n">npl</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">AHA</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">I</span><span class="p">)</span>
+    <span class="n">Inv</span> <span class="o">=</span> <span class="n">npl</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">AHA</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">mat_eye</span><span class="p">)</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">L</span><span class="p">),</span> <span class="n">dtype</span><span class="p">)</span>
 
     <span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
 
-    <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="o">*</span><span class="n">arrD</span><span class="p">,),</span> <span class="n">dtype</span><span class="p">)</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="o">*</span><span class="n">arr_d</span><span class="p">,),</span> <span class="n">dtype</span><span class="p">)</span>
 
     <span class="n">T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="p">)</span>
 
     <span class="n">Lb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="p">)</span>
     <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">L</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="p">)</span>
 
-    <span class="n">Winv</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">calcW</span><span class="p">(</span><span class="n">arrD</span><span class="p">)</span>
+    <span class="n">Winv</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">_calc_w</span><span class="p">(</span><span class="n">arr_d</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
 
@@ -233,10 +319,10 @@
             <span class="p">)</span>
 
         <span class="n">u</span> <span class="o">=</span> <span class="n">Winv</span> <span class="o">*</span> <span class="p">(</span>
-                <span class="n">ToepAdj</span><span class="p">(</span><span class="n">arrD</span><span class="p">,</span> <span class="n">Z</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="p">:</span><span class="n">L</span><span class="p">]</span> <span class="o">+</span> <span class="n">rhoInv</span> <span class="o">*</span> <span class="n">Lb</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="p">:</span><span class="n">L</span><span class="p">])</span> <span class="o">+</span> <span class="n">e1</span>
+                <span class="n">ToepAdj</span><span class="p">(</span><span class="n">arr_d</span><span class="p">,</span> <span class="n">Z</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="p">:</span><span class="n">L</span><span class="p">]</span> <span class="o">+</span> <span class="n">rhoInv</span> <span class="o">*</span> <span class="n">Lb</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="p">:</span><span class="n">L</span><span class="p">])</span> <span class="o">+</span> <span class="n">e1</span>
             <span class="p">)</span>
 
-        <span class="n">T</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="p">:</span><span class="n">L</span><span class="p">]</span> <span class="o">=</span> <span class="n">Toep</span><span class="p">(</span><span class="n">arrD</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+        <span class="n">T</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="p">:</span><span class="n">L</span><span class="p">]</span> <span class="o">=</span> <span class="n">Toep</span><span class="p">(</span><span class="n">arr_d</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
         <span class="n">T</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
         <span class="n">T</span><span class="p">[</span><span class="n">L</span><span class="p">,</span> <span class="p">:</span><span class="n">L</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="n">T</span><span class="p">[</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">]</span> <span class="o">=</span> <span class="n">t</span>
@@ -250,7 +336,7 @@
 
         <span class="n">Lb</span> <span class="o">+=</span> <span class="n">rho</span> <span class="o">*</span> <span class="p">(</span><span class="n">Z</span> <span class="o">-</span> <span class="n">T</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Toep</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">t</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Toep</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="n">t</span><span class="p">)</span></div>
 </pre></div>
 
           </div>
