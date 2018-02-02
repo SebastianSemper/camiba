@@ -25,7 +25,7 @@ class Soe(Scenario):
 
     """
     Here we implement a Class, which provides different methods for sparsity
-    order estimation from compressed measurements.
+    order estimation from compressed measurements. Many of them are very good.
     """
 
     def __init__(

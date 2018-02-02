@@ -6,7 +6,6 @@ applicable stuff way easier.
 
 import os
 import csv
-import math
 import numpy as np
 import numpy.linalg as npl
 import numpy.random as npr
@@ -14,7 +13,20 @@ import numpy.random as npr
 
 def hard_thrshld(arr_x, num_k):
     """
-        hard thresholds a vector to a certain level
+        Hard Thresholding
+
+    Parameters
+    ----------
+
+    arr_x : ndarray
+        vector to threshold
+    num_k : int
+        thresholding parameter
+
+    Returns
+    -------
+    ndarray
+        thresholded vector
     """
 
     sort = np.argsort(np.abs(arr_x))
@@ -24,7 +36,20 @@ def hard_thrshld(arr_x, num_k):
 
 def soft_thrshld(arr_x, num_alpha):
     """
-        soft thresholds a vector to a certain level
+        Soft Thresholding
+
+    Parameters
+    ----------
+
+    arr_x : ndarray
+        vector to threshold
+    num_k : int
+        thresholding parameter
+
+    Returns
+    -------
+    ndarray
+        thresholded vector
     """
 
     arr_sig = np.sign(arr_x)
@@ -157,7 +182,7 @@ def normGram(
     """
     arr_n = np.zeros(X.shape[1])
     for ii in range(0, X.shape[1]):
-        arr_n[ii] = 1.0/math.sqrt(np.sum(X[:, ii]**2))
+        arr_n[ii] = 1.0/np.sqrt(np.sum(X[:, ii]**2))
 
     return(((arr_n*X).T).dot(arr_n*X))
 
@@ -192,3 +217,22 @@ def arrayToString(x):
     x_txt = list(map(lambda tt: str(tt), x.tolist()))
     x_txt = ",".join(x_txt)
     return x_txt
+
+
+def T1_dist_l2(phi, phihat):
+    phi1 = phi.squeeze().reshape((-1, +1))
+    phi2 = phihat.squeeze().reshape((+1, -1))
+
+    D1 = np.mod(phi1 - phi2, 2 * np.pi)
+    D2 = np.mod(phi2 - phi1, 2 * np.pi)
+
+    D = np.minimum(D1, D2)
+
+    err = np.empty(D.shape[0])
+
+    for ii in range(D.shape[0]):
+        minInd = np.unravel_index(np.argmin(D), D.shape)
+        err[ii] = D[minInd[0], minInd[1]]
+        D = np.delete(np.delete(D, minInd[1], 1), minInd[0], 0)
+
+    return npl.norm(err) ** 2

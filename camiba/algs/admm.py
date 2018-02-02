@@ -12,16 +12,37 @@ from ..linalg.basic import soft_thrshld
 from ..linalg.multilevel import *
 
 
-def bpdn_1d(
-    A,              # system matrix
-    b,              # measurements
-    x_init,         # inital iterate
-    rho,            # parameter of augmented lagrangian
-    alpha,          # thresholding parameter
-    num_maxsteps    # maximum number of steps
-):
+def bpdn_1d(A, b, x_init, rho, alpha, num_steps):
     """
     Basis Pursuit Denoising
+
+    For given matrix A, vector b and z > 0, ADDM approximates a solution to
+
+    min ||x||_1 s.t. ||A * x - b||_2 < z.
+
+    The algorithm needs a thresholding parameter, an initial guess for a
+    solution and a parameter for the augmented lagrangian.
+
+    Parameters
+    ----------
+
+    A : ndarray
+        system matrix
+    b : ndarray
+        measurement vector
+    x_init : ndarray
+        initial solution guess
+    rho : float
+        parameter for augmented lagrangian
+    alpha : float
+        thresholding parameter
+    num_steps : int
+        number of steps
+
+    Returns
+    -------
+    ndarray
+        approximated solution to BPDN
     """
     numN, numM = A.shape
 
@@ -38,7 +59,7 @@ def bpdn_1d(
     x_hat = alpha*x + (1-alpha)*z
     u = u + (x_hat - z)
 
-    for ii in range(num_maxsteps):
+    for ii in range(num_steps):
         x = P.dot(z-u) + q
 
         x_hat = alpha*x + (1-alpha)*z
@@ -49,30 +70,52 @@ def bpdn_1d(
     return z
 
 
-def anm_lse_1d(
-    A,          # compression matrix
-    AH,         # A^H
-    AHA,        # A^H * A
-    y,          # measurements
-    rho,        # augmented lagrangian parameter
-    tau,        # regularization parameter
-    steps       # maximum number of steps
-):
+def anm_lse_1d(A, AH, AHA, y, rho, tau, num_steps):
     """
     Atomic Norm Denoising for 1D Line Spectral Estimation
 
+    This ADMM approximates a solution to
 
+    min_[x,u,t] 1/(2n) trace T(u) + 1/2 t
+    s.t.
+    [[T(u), x], [x^H, t]] >= 0, ||b - Ax||_2 < z
+
+    for given matrix A, vector b and z > 0. Moreover, T(u) maps the vector
+    u to a Hermitian Toeplitz matrix defined by u.
+
+    Parameters
+    ----------
+
+    A : ndarray
+        system matrix
+    AH : ndarray
+        Hermitian transpose of system matrix
+    AHA : ndarray
+        Gram matrix of system matrix
+    b : ndarray
+        measurement vector
+    rho : float
+        parameter for augmented lagrangian
+    alpha : float
+        thresholding parameter
+    num_steps : int
+        number of steps
+
+    Returns
+    -------
+    (ndarray, ndarray, ndarray)
+        x, T(u), t
     """
     dtype = np.promote_types(A.dtype, y.dtype)
 
     K, L = A.shape
 
-    I = np.eye(L)
-    e1 = -L * .5 * (tau / rho) * I[0]
+    mat_eye = np.eye(L)
+    e1 = -L * .5 * (tau / rho) * mat_eye[0]
     rhoInv = 1. / rho
     tauHalf = -.5 * tau
 
-    Inv = npl.inv(AHA + 2 * rho * I)
+    Inv = npl.inv(AHA + 2 * rho * mat_eye)
 
     x = np.zeros((L), dtype)
     t = 0
@@ -84,12 +127,12 @@ def anm_lse_1d(
     Winv = 1. / (np.linspace(L, 1, L))
     Winv[0] = 2. / L
 
-    for ii in range(steps):
+    for ii in range(num_steps):
 
         t = Z[L, L] + rhoInv * (Lb[L, L] + tauHalf)
 
         x = Inv.dot(
-            AH.dot(y) + 2 * (Lb[:L, L] + rho * Z[:L, L])
+            AH.dot(b) + 2 * (Lb[:L, L] + rho * Z[:L, L])
         )
 
         u = Winv * (
@@ -112,69 +155,112 @@ def anm_lse_1d(
     return (x, T[:L, :L], t)
 
 
-def calcW(arrD):
+def _calc_w(arr_d):
     """
         Calculate Weighting Matrix in Derivative
+
+    This is needed in anm_lse_nd to generate the diagonal of a weighting
+    matrix during the gradient decent step.
     """
 
-    tenW = np.ones((*arrD,))
-    return _calcWrec(arrD, tenW)
+    ten_w = np.ones((*arr_d,))
+    return _calc_wrec(arr_d, ten_w)
 
 
-def _calcWrec(arrD, tenW):
+def _calc_wrec(arr_d, ten_w):
     """
         Recursion Function in Weight Matrix Calculation
+
+    This is a recursive function used in _calc_w.
     """
     # number of dimensions in current level
-    numD = arrD.shape[0]
+    num_d = arr_d.shape[0]
 
     # get size of resulting block toeplitz matrix
-    prdD0 = np.prod(arrD)
+    prdD0 = np.prod(arr_d)
 
     # get an array of all partial sequential products
     # starting at the front
-    prdD1 = np.prod(arrD[1:])
+    prdD1 = np.prod(arr_d[1:])
 
-    arrF = 2 * (arrD[0] - (np.arange(arrD[0]) + 1) + 1)
-    arrF[0] -= arrD[0]
+    arrF = 2 * (arr_d[0] - (np.arange(arr_d[0]) + 1) + 1)
+    arrF[0] -= arr_d[0]
 
-    if numD > 1:
-        for nn in range(arrD[0]):
-            _calcWrec(arrD[1:], tenW[nn])
+    if num_d > 1:
+        for nn in range(arr_d[0]):
+            _calc_wrec(arr_d[1:], ten_w[nn])
 
-    for ii in range(arrD[0]):
-        tenW[ii] *= arrF[ii]
+    for ii in range(arr_d[0]):
+        ten_w[ii] *= arrF[ii]
 
 
-def anm_lse_nd(A, AH, AHA, y, rho, tau, steps, arrD):
+def anm_lse_nd(A, AH, AHA, y, rho, tau, num_steps, arr_d):
+    """
+    Atomic Norm Denoising for 1D Line Spectral Estimation
 
+    This ADMM approximates a solution to
+
+    min_[x,u,t] 1/(2n) trace T(u) + 1/2 t
+    s.t.
+    [[T(u), x], [x^H, t]] >= 0, ||b - Ax||_2 < z
+    
+    for given matrix A, vector b and z > 0. Moreover, T(u) maps the tensor of
+    order l u to a l-level Hermitian Toeplitz matrix defined by u.
+
+    Parameters
+    ----------
+
+    A : ndarray
+        system matrix
+    AH : ndarray
+        Hermitian transpose of system matrix
+    AHA : ndarray
+        Gram matrix of system matrix
+    b : ndarray
+        measurement vector
+    rho : float
+        parameter for augmented lagrangian
+    alpha : float
+        thresholding parameter
+    num_steps : int
+        number of steps
+    arr_d : ndarray
+        dimension sizes
+
+    Returns
+    -------
+    (ndarray, ndarray, ndarray)
+        x, T(u), t
+    """
+    # detect datatype
     dtype = np.promote_types(A.dtype, y.dtype)
 
+    # extract the shaped
     K, L = A.shape
 
     # number of dimensions
-    D = len(arrD.shape)
+    D = len(arr_d.shape)
 
-    I = np.eye(L)
-    e1 = -L * .5 * (tau / rho) * I[0]
+    mat_eye = np.eye(L)
+    e1 = -L * .5 * (tau / rho) * mat_eye[0]
     rhoInv = 1. / rho
     tauHalf = -.5 * tau
 
     AHy = AH.dot(y)
-    Inv = npl.inv(AHA + 2 * rho * I)
+    Inv = npl.inv(AHA + 2 * rho * mat_eye)
 
     x = np.zeros((L), dtype)
 
     t = 0
 
-    u = np.zeros((*arrD,), dtype)
+    u = np.zeros((*arr_d,), dtype)
 
     T = np.zeros((L + 1, L + 1), dtype)
 
     Lb = np.zeros((L + 1, L + 1), dtype)
     Z = np.zeros((L + 1, L + 1), dtype)
 
-    Winv = 1. / calcW(arrD)
+    Winv = 1. / _calc_w(arr_d)
 
     for ii in range(steps):
 
@@ -185,10 +271,10 @@ def anm_lse_nd(A, AH, AHA, y, rho, tau, steps, arrD):
             )
 
         u = Winv * (
-                ToepAdj(arrD, Z[:L, :L] + rhoInv * Lb[:L, :L]) + e1
+                ToepAdj(arr_d, Z[:L, :L] + rhoInv * Lb[:L, :L]) + e1
             )
 
-        T[:L, :L] = Toep(arrD, u)
+        T[:L, :L] = Toep(arr_d, u)
         T[:L, L] = x
         T[L, :L] = np.conj(x)
         T[L, L] = t

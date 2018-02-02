@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
-"""provides the orthogonal matching pursuit to approximate a solution
-    to the l_0-minimization problem."""
+"""
+Provides the Orthogonal Matching Pursuit Algorithm to approximate a solution
+to the l_0-minimization problem, which reads as
+
+min ||x||_0 s.t. Ax = b
+
+for given matrix A and vector b and it is described and analyzed in [OMP]_.
+"""
 
 import numpy as np
 import numpy.linalg as npl
@@ -9,10 +15,26 @@ import numpy.linalg as npl
 def recover(
     mat_A,
     arr_b,
-    num_k,
+    num_steps,
 ):
-    """do the recovery for matrix mat_A, measurement
-    arr_b for a given number of steps"""
+    """
+        Orthogonal Matching Pursuit Algorithm
+
+    Parameters
+    ----------
+
+    mat_A : ndarray
+        system matrix
+    arr_b : ndarray
+        measurement vector
+    num_steps : int
+        iteration steps
+
+    Returns
+    -------
+    ndarray
+        estimated sparse solution
+    """
 
     dt_type = np.promote_types(arr_b.dtype, mat_a.dtype)
 
@@ -26,7 +48,7 @@ def recover(
     x = np.zeros(m, dtype=dt_type)
     S = np.zeros(m, dtype=dt_type)
 
-    for i in range(0, num_k):
+    for i in range(0, num_steps):
 
         # calc correlation
         r = np.abs(A.conj().T.dot((arr_b - mat_A.dot(x))))/arr_d

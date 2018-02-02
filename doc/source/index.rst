@@ -1,10 +1,7 @@
-.. camiba documentation master file, created by
-   sphinx-quickstart on Wed Jan 31 14:12:09 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. _index:
 
-Welcome to camiba's documentation!
-==================================
+Home Page
+=========
 
 .. toctree::
     :hidden:
@@ -21,6 +18,7 @@ Welcome to camiba's documentation!
 Indices and tables
 ==================
 
+* :ref:`index`
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
