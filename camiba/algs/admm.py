@@ -203,7 +203,7 @@ def anm_lse_nd(A, AH, AHA, y, rho, tau, num_steps, arr_d):
     min_[x,u,t] 1/(2n) trace T(u) + 1/2 t
     s.t.
     [[T(u), x], [x^H, t]] >= 0, ||b - Ax||_2 < z
-    
+
     for given matrix A, vector b and z > 0. Moreover, T(u) maps the tensor of
     order l u to a l-level Hermitian Toeplitz matrix defined by u.
 
@@ -267,12 +267,12 @@ def anm_lse_nd(A, AH, AHA, y, rho, tau, num_steps, arr_d):
         t = Z[L, L] + rhoInv * (Lb[L, L] + tauHalf)
 
         x = Inv.dot(
-                AHy + 2 * (Lb[:L, L] + rho * Z[:L, L])
-            )
+            AHy + 2 * (Lb[:L, L] + rho * Z[:L, L])
+        )
 
         u = Winv * (
-                ToepAdj(arr_d, Z[:L, :L] + rhoInv * Lb[:L, :L]) + e1
-            )
+            ToepAdj(arr_d, Z[:L, :L] + rhoInv * Lb[:L, :L]) + e1
+        )
 
         T[:L, :L] = Toep(arr_d, u)
         T[:L, L] = x

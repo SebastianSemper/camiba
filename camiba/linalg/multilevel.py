@@ -111,7 +111,7 @@ def _toepRecursion(
         return spToep(tenU[:numN].conj())
 
 
-def ToepAdj(arrD, matA, verbose=False):
+def ToepAdj(arrD, mat_A, verbose=False):
     """
         Calculate the Adjoint Operator of <T,A>
 
@@ -130,16 +130,16 @@ def ToepAdj(arrD, matA, verbose=False):
     ndarray
         The constructed (sub)matrix as 2D ndarray
     """
-    tenR = np.zeros((*arrD,), dtype=matA.dtype)
+    tenR = np.zeros((*arrD,), dtype=mat_A.dtype)
 
-    _toepAdjRec(arrD, matA, tenR, verbose)
+    _toepAdjRec(arrD, mat_A, tenR, verbose)
 
     return tenR
 
 
 def _toepAdjRec(
     arrN,               # dimensions in each level
-    matA,               # defining elements
+    mat_A,               # defining elements
     tenR,
     verbose=False       # verbosity flag
 ):
@@ -163,7 +163,7 @@ def _toepAdjRec(
             for mm in range(countBlocks):
                 _toepAdjRec(
                     arrN[1:],
-                    matA[
+                    mat_A[
                         (mm + nn) * arrNprod: (mm + 1 + nn) * arrNprod,
                         mm * arrNprod: (mm + 1) * arrNprod
                     ],
@@ -172,4 +172,4 @@ def _toepAdjRec(
                 )
     else:
         for ii in range(arrN[0]):
-            tenR[ii] += np.trace(matA[:(arrN[0]-ii), ii:])
+            tenR[ii] += np.trace(mat_A[:(arrN[0]-ii), ii:])

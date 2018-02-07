@@ -15,6 +15,5 @@ setup(
     # these are optional and override conf.py settings
     command_options={
         'build_doc': {
-
         }}
-    )
+)

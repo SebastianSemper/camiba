@@ -36,6 +36,22 @@ class Soe(Scenario):
             algorithm=omp.recover,
             **kwargs
     ):
+        """
+            Construct an SOE Scenario
+
+        Parameters
+        ----------
+        num_n : int
+            number of atoms in the dictionary
+        num_m : int
+            number to compress down to
+        mos_method : string, optional
+            method to use for model order selection
+        algorithm : function
+            recovery method
+        **kwargs : dict
+            additional arguments for each MOS method
+        """
 
         # save the MOS algorithm
         self._mos_method = mos_method
@@ -65,14 +81,26 @@ class Soe(Scenario):
             self._estimate_function = self._est_lopes
 
         elif mos_method == 'ravazzi':
+
+            # density parameter and variance of normal distribution
             self._num_gamma = kwargs['num_gamma']
+
+            # generate the uniform distribution to decide where there are zeros
+            # in the measurement matrix
             matUniform = npr.uniform(0, 1, (num_m, num_n))
+
+            # generate the normal distributed samples
             matNormal = (1 / np.sqrt(self._num_gamma)) * \
                 npr.randn(num_m, num_n)
+
+            # decide where there are zeros
             matSubSel = 1 * (matUniform < self._num_gamma)
 
+            # put the normal distributed elements, where we rolled the
+            # dice correctly
             matMeasurement = matSubSel * matNormal
 
+            # set the correct estimation function
             self._estimate_function = self._est_ravazzi
 
         else:
@@ -89,6 +117,9 @@ class Soe(Scenario):
             # make scenario complex if we do overlap
             self._do_complex = ((num_p != 0) or (kwargs['do_complex']))
 
+            # if we have no overlap, both matrices should be gaussian
+            # if we have overlap one has to be vandermonde and the scenario
+            # itself has to be complex
             if self._num_p == 0:
 
                 # find dimensions most suitable
@@ -188,8 +219,20 @@ class Soe(Scenario):
         arr_b
     ):
         """
-            actual interface function that allows this class
-            to perform SOE given a single vector or an array of vectors
+            Do Sparsity Order Estimation
+
+        This function does the acutal SOE process for a given measurement
+        and returns the estimated size.
+
+        Parameters
+        ----------
+        arr_b : ndarray
+            one ore several compressed measurements
+
+        Returns
+        -------
+        ndarray
+            the estimated sparsity orders
         """
 
         if len(arr_b.shape) > 1:
@@ -334,11 +377,11 @@ class Soe(Scenario):
 
             # adapt to complex case
             if doComplex:
-                mat_trials = (npr.randn(self._numK, num_trials) +
-                              1j*npr.randn(self._numK, num_trials)
+                mat_trials = (npr.randn(self._num_k, num_trials) +
+                              1j*npr.randn(self._num_k, num_trials)
                               )/math.sqrt(2.0)
             else:
-                mat_trials = npr.randn(self._numK, num_trials)
+                mat_trials = npr.randn(self._num_k, num_trials)
 
             num_P = min(self._num_k, self._num_l)
 
@@ -404,11 +447,11 @@ class Soe(Scenario):
 
             # adapt to complex case
             if doComplex:
-                mat_trials = 2*(npr.randn(self._numK, num_trials) +
-                                1j*npr.randn(self._numK, num_trials)
+                mat_trials = 2*(npr.randn(self._num_k, num_trials) +
+                                1j*npr.randn(self._num_k, num_trials)
                                 )/math.sqrt(2.0)
             else:
-                mat_trials = 2*npr.randn(self._numK, num_trials)
+                mat_trials = 2*npr.randn(self._num_k, num_trials)
 
             num_P = min(self._num_k, self._num_l)
 
@@ -606,7 +649,7 @@ class Soe(Scenario):
         num_s = 10
         num_k = 10
         arr_ka = np.zeros(num_s)
-        arr_pi = np.zeros((self._numK, num_s))
+        arr_pi = np.zeros((self._num_k, num_s))
         arr_al = np.zeros(num_s)
         arr_be = np.zeros(num_s)
         arr_pe = np.zeros(num_s)
@@ -627,7 +670,7 @@ class Soe(Scenario):
             # M-Step
             sum1 = np.sum(arr_pi[:, ii + 1])
             sum2 = np.sum(1 - arr_pi[:, ii + 1])
-            arr_pe[ii + 1] = sum1 / self._numK
+            arr_pe[ii + 1] = sum1 / self._num_k
             arr_ka[ii + 1] = np.log(arr_pe[ii + 1]) \
                 / np.log(1 - self._num_gamma)
 
@@ -638,32 +681,64 @@ class Soe(Scenario):
         return int(arr_ka[num_s - 1])
 
     def phase_trans_est(self,
-                        num_s,				# fixed sparsity order
-                        fun_x,				# ground truth generation
-                        arrSNR,				# array for SNR range
-                        funNoise,			# noise generating function
-                        dct_fun_compare,  # dictionary of comparison functions
-                        numTrials			# number of trials for each SNR level
+                        num_s,
+                        fun_x,
+                        arr_snr,
+                        fun_noise,
+                        dct_fun_compare,
+                        num_trials
                         ):
         """
-            calculate a phase transition where do SOE
+            Calculate a phase transition
 
-            returns a dictionary with keys taken from dictionary of compare
-            functions
+        Given the scenario we generate sparse vectors with a certain fixed
+        sparsity level and according to a provided scheme. Then we apply the
+        forward model and the compression and add noise to the compressed
+        measurements, which is generated by a provided noise generating
+        function. Here, we only estimate the sparsity order and check if it
+        succeeds or fails. This is done several times for each
+        level of SNR and after each reconstruction, we compare the
+        reconstruction with respect to one or more provided error metrics.
+        Finally everything is saved and returned in a dictionary where the keys
+        are given by the SNR and the name of the applied error metric.
+
+        Parameters
+        ----------
+        num_s : int
+            sparsity level
+        fun_x : method
+            function, which takes the sparsity level as parameter to generate
+            a sparse vector
+        args : dict
+            arguments for the recovery algorithm
+        arr_snr : ndarray
+            all level of SNR to go through
+        fun_noise : ndarray
+            noise generating function, taking the snr and the vector
+            size as arguments
+        dct_fun_compare : dict
+            dictionary of comparison function
+        num_trials : int
+            number of trials to run at each snr level
+
+        Returns
+        -------
+        ndarray
+            the compressed measurement
         """
         dct_res = {}
         for ii in dct_fun_compare.items():
             dct_res.update({ii[0]: np.zeros((
-                len(arrSNR),			# for each snr level
-                numTrials				# for each trial
+                len(arr_snr),			# for each snr level
+                num_trials				# for each trial
             ))})
 
-        for ii, snr in enumerate(arrSNR):
-            for jj in range(numTrials):
+        for ii, snr in enumerate(arr_snr):
+            for jj in range(num_trials):
 
                 # generate ground truth and noisy measurement
                 arrX = fun_x(num_s)
-                arrB = self.compress(arrX) + funNoise(snr, self._numK)
+                arrB = self.compress(arrX) + fun_noise(snr, self._num_k)
 
                 # estimate the sparsity order
                 num_s_est = self.estimate(arrB)
@@ -680,20 +755,53 @@ class Soe(Scenario):
         return dct_res
 
     def phase_trans_est_rec(self,
-                            num_s,				# fixed sparsity order
-                            fun_x,				# ground truth generation
-                            args,				# preliminary arguments
-                            arrSNR,				# array for SNR range
-                            funNoise,			# noise generating function
-                            dct_fun_compare,  # function to compare recovery to ground truth
-                            numTrials			# number of trials for each SNR level
+                            num_s,
+                            fun_x,
+                            args,
+                            arr_snr,
+                            fun_noise,
+                            dct_fun_compare,
+                            num_trials
                             ):
         """
-            calculate a phase transition where we first do SOE and then
-            the reconstruction, which might get better with this knowledge
+            Calculate a phase transition
 
-            returns a dictionary with keys taken from dictionary of compare
-            functions
+        Given the scenario we generate sparse vectors with a certain fixed
+        sparsity level and according to a provided scheme. Then we apply the
+        forward model and the compression and add noise to the compressed
+        measurements, which is generated by a provided noise generating
+        function. Then we aim a reconstructing the original signal from this
+        compressed and noisy data, where we also feed the estimated sparsity
+        order, which is provided by this class as a parameter in the algorithm
+        for reconstruction. This is done several times for each
+        level of SNR and after each reconstruction, we compare the
+        reconstruction with respect to one or more provided error metrics.
+        Finally everything is saved and returned in a dictionary where the keys
+        are given by the SNR and the name of the applied error metric.
+
+        Parameters
+        ----------
+        num_s : int
+            sparsity level
+        fun_x : method
+            function, which takes the sparsity level as parameter to generate
+            a sparse vector
+        args : dict
+            arguments for the recovery algorithm
+        arr_snr : ndarray
+            all level of SNR to go through
+        fun_noise : ndarray
+            noise generating function, taking the snr and the vector
+            size as arguments
+        dct_fun_compare : dict
+            dictionary of comparison function
+        num_trials : int
+            number of trials to run at each snr level
+
+        Returns
+        -------
+        ndarray
+            the compressed measurement
         """
 
         # dictionary with results
@@ -702,17 +810,17 @@ class Soe(Scenario):
         # initialize with keys from compare function
         for ii in dct_fun_compare.items():
             dct_res.update({ii[0]: np.zeros((
-                len(arrSNR),			# for each snr level
-                numTrials				# for each trial
+                len(arr_snr),			# for each snr level
+                num_trials				# for each trial
             ))})
 
         # g through SNR and trials
-        for ii, snr in enumerate(arrSNR):
-            for jj in range(numTrials):
+        for ii, snr in enumerate(arr_snr):
+            for jj in range(num_trials):
 
                 # generate ground truth and noisy measurement
                 arrX = fun_x(num_s)
-                arrB = self.compress(arrX) + funNoise(snr, self._numK)
+                arrB = self.compress(arrX) + fun_noise(snr, self._num_k)
 
                 # estimate the sparsity order
                 num_s_est = self.estimate(arrB)

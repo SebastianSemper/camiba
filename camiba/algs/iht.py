@@ -53,7 +53,7 @@ def recover(
         arr_residual = mat_A.dot(arr_x) - arr_b
 
         arr_x = hard_thrshld(
-                arr_x - 2*num_t * (mat_A.conj().T).dot(arr_residual),
-                num_k
-                )
+            arr_x - 2*num_t * (mat_A.conj().T).dot(arr_residual),
+            num_k
+        )
     return arr_x

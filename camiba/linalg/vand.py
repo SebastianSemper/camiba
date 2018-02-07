@@ -7,6 +7,7 @@ import numpy.linalg as npl
 
 from ..linalg.basic import coh
 
+
 def opt_c(
     num_n,
     num_m,

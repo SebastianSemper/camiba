@@ -115,7 +115,7 @@ def khatri_rao(X, Y):
     Z = np.zeros(
         (N, X.shape[1]),
         dtype=np.promote_types(X.dtype, y.dtype)
-        )
+    )
 
     # now push the reshaped outer products into the columns of the result
     for ii in range(0, X.shape[1]):
