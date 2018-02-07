@@ -11,6 +11,9 @@ Camiba provides methods for:
  * an abstract wrapper to describe CS scenarios
  * methods for sparsity order estimation
 
+Contents
+--------
+ * :py:mod:`camiba.data`
 
 Submodules
 ----------
@@ -29,3 +32,4 @@ from .algs.ista import *
 from .algs.omp import *
 
 from .cs import *
+from .data import *

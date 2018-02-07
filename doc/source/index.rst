@@ -11,6 +11,7 @@ Home Page
     algs
     cs
     linalg
+    data
 
 
 .. automodule:: camiba
