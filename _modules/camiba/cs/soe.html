@@ -84,6 +84,22 @@
             <span class="n">algorithm</span><span class="o">=</span><span class="n">omp</span><span class="o">.</span><span class="n">recover</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Construct an SOE Scenario</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        num_n : int</span>
+<span class="sd">            number of atoms in the dictionary</span>
+<span class="sd">        num_m : int</span>
+<span class="sd">            number to compress down to</span>
+<span class="sd">        mos_method : string, optional</span>
+<span class="sd">            method to use for model order selection</span>
+<span class="sd">        algorithm : function</span>
+<span class="sd">            recovery method</span>
+<span class="sd">        **kwargs : dict</span>
+<span class="sd">            additional arguments for each MOS method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># save the MOS algorithm</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_mos_method</span> <span class="o">=</span> <span class="n">mos_method</span>
@@ -113,14 +129,26 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_est_lopes</span>
 
         <span class="k">elif</span> <span class="n">mos_method</span> <span class="o">==</span> <span class="s1">&#39;ravazzi&#39;</span><span class="p">:</span>
+
+            <span class="c1"># density parameter and variance of normal distribution</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_num_gamma</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;num_gamma&#39;</span><span class="p">]</span>
+
+            <span class="c1"># generate the uniform distribution to decide where there are zeros</span>
+            <span class="c1"># in the measurement matrix</span>
             <span class="n">matUniform</span> <span class="o">=</span> <span class="n">npr</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">num_m</span><span class="p">,</span> <span class="n">num_n</span><span class="p">))</span>
+
+            <span class="c1"># generate the normal distributed samples</span>
             <span class="n">matNormal</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_gamma</span><span class="p">))</span> <span class="o">*</span> \
                 <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">num_m</span><span class="p">,</span> <span class="n">num_n</span><span class="p">)</span>
+
+            <span class="c1"># decide where there are zeros</span>
             <span class="n">matSubSel</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">matUniform</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_gamma</span><span class="p">)</span>
 
+            <span class="c1"># put the normal distributed elements, where we rolled the</span>
+            <span class="c1"># dice correctly</span>
             <span class="n">matMeasurement</span> <span class="o">=</span> <span class="n">matSubSel</span> <span class="o">*</span> <span class="n">matNormal</span>
 
+            <span class="c1"># set the correct estimation function</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_est_ravazzi</span>
 
         <span class="k">else</span><span class="p">:</span>
@@ -137,6 +165,9 @@
             <span class="c1"># make scenario complex if we do overlap</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_do_complex</span> <span class="o">=</span> <span class="p">((</span><span class="n">num_p</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;do_complex&#39;</span><span class="p">]))</span>
 
+            <span class="c1"># if we have no overlap, both matrices should be gaussian</span>
+            <span class="c1"># if we have overlap one has to be vandermonde and the scenario</span>
+            <span class="c1"># itself has to be complex</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_p</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
 
                 <span class="c1"># find dimensions most suitable</span>
@@ -236,8 +267,20 @@
         <span class="n">arr_b</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            actual interface function that allows this class</span>
-<span class="sd">            to perform SOE given a single vector or an array of vectors</span>
+<span class="sd">            Do Sparsity Order Estimation</span>
+
+<span class="sd">        This function does the acutal SOE process for a given measurement</span>
+<span class="sd">        and returns the estimated size.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        arr_b : ndarray</span>
+<span class="sd">            one ore several compressed measurements</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            the estimated sparsity orders</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr_b</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -382,11 +425,11 @@
 
             <span class="c1"># adapt to complex case</span>
             <span class="k">if</span> <span class="n">doComplex</span><span class="p">:</span>
-                <span class="n">mat_trials</span> <span class="o">=</span> <span class="p">(</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_numK</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span> <span class="o">+</span>
-                              <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_numK</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
+                <span class="n">mat_trials</span> <span class="o">=</span> <span class="p">(</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span> <span class="o">+</span>
+                              <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
                               <span class="p">)</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">mat_trials</span> <span class="o">=</span> <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_numK</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
+                <span class="n">mat_trials</span> <span class="o">=</span> <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
 
             <span class="n">num_P</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">)</span>
 
@@ -452,11 +495,11 @@
 
             <span class="c1"># adapt to complex case</span>
             <span class="k">if</span> <span class="n">doComplex</span><span class="p">:</span>
-                <span class="n">mat_trials</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_numK</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span> <span class="o">+</span>
-                                <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_numK</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
+                <span class="n">mat_trials</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span> <span class="o">+</span>
+                                <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
                                 <span class="p">)</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">mat_trials</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_numK</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
+                <span class="n">mat_trials</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
 
             <span class="n">num_P</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">)</span>
 
@@ -654,7 +697,7 @@
         <span class="n">num_s</span> <span class="o">=</span> <span class="mi">10</span>
         <span class="n">num_k</span> <span class="o">=</span> <span class="mi">10</span>
         <span class="n">arr_ka</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
-        <span class="n">arr_pi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_numK</span><span class="p">,</span> <span class="n">num_s</span><span class="p">))</span>
+        <span class="n">arr_pi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_s</span><span class="p">))</span>
         <span class="n">arr_al</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
         <span class="n">arr_be</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
         <span class="n">arr_pe</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
@@ -675,7 +718,7 @@
             <span class="c1"># M-Step</span>
             <span class="n">sum1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">arr_pi</span><span class="p">[:,</span> <span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
             <span class="n">sum2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">arr_pi</span><span class="p">[:,</span> <span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
-            <span class="n">arr_pe</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">sum1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_numK</span>
+            <span class="n">arr_pe</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">sum1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span>
             <span class="n">arr_ka</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">arr_pe</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> \
                 <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_gamma</span><span class="p">)</span>
 
@@ -686,32 +729,64 @@
         <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">arr_ka</span><span class="p">[</span><span class="n">num_s</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
 
 <div class="viewcode-block" id="Soe.phase_trans_est"><a class="viewcode-back" href="../../../cs.html#camiba.cs.Soe.phase_trans_est">[docs]</a>    <span class="k">def</span> <span class="nf">phase_trans_est</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                        <span class="n">num_s</span><span class="p">,</span>				<span class="c1"># fixed sparsity order</span>
-                        <span class="n">fun_x</span><span class="p">,</span>				<span class="c1"># ground truth generation</span>
-                        <span class="n">arrSNR</span><span class="p">,</span>				<span class="c1"># array for SNR range</span>
-                        <span class="n">funNoise</span><span class="p">,</span>			<span class="c1"># noise generating function</span>
-                        <span class="n">dct_fun_compare</span><span class="p">,</span>  <span class="c1"># dictionary of comparison functions</span>
-                        <span class="n">numTrials</span>			<span class="c1"># number of trials for each SNR level</span>
+                        <span class="n">num_s</span><span class="p">,</span>
+                        <span class="n">fun_x</span><span class="p">,</span>
+                        <span class="n">arr_snr</span><span class="p">,</span>
+                        <span class="n">fun_noise</span><span class="p">,</span>
+                        <span class="n">dct_fun_compare</span><span class="p">,</span>
+                        <span class="n">num_trials</span>
                         <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            calculate a phase transition where do SOE</span>
+<span class="sd">            Calculate a phase transition</span>
 
-<span class="sd">            returns a dictionary with keys taken from dictionary of compare</span>
-<span class="sd">            functions</span>
+<span class="sd">        Given the scenario we generate sparse vectors with a certain fixed</span>
+<span class="sd">        sparsity level and according to a provided scheme. Then we apply the</span>
+<span class="sd">        forward model and the compression and add noise to the compressed</span>
+<span class="sd">        measurements, which is generated by a provided noise generating</span>
+<span class="sd">        function. Here, we only estimate the sparsity order and check if it</span>
+<span class="sd">        succeeds or fails. This is done several times for each</span>
+<span class="sd">        level of SNR and after each reconstruction, we compare the</span>
+<span class="sd">        reconstruction with respect to one or more provided error metrics.</span>
+<span class="sd">        Finally everything is saved and returned in a dictionary where the keys</span>
+<span class="sd">        are given by the SNR and the name of the applied error metric.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        num_s : int</span>
+<span class="sd">            sparsity level</span>
+<span class="sd">        fun_x : method</span>
+<span class="sd">            function, which takes the sparsity level as parameter to generate</span>
+<span class="sd">            a sparse vector</span>
+<span class="sd">        args : dict</span>
+<span class="sd">            arguments for the recovery algorithm</span>
+<span class="sd">        arr_snr : ndarray</span>
+<span class="sd">            all level of SNR to go through</span>
+<span class="sd">        fun_noise : ndarray</span>
+<span class="sd">            noise generating function, taking the snr and the vector</span>
+<span class="sd">            size as arguments</span>
+<span class="sd">        dct_fun_compare : dict</span>
+<span class="sd">            dictionary of comparison function</span>
+<span class="sd">        num_trials : int</span>
+<span class="sd">            number of trials to run at each snr level</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            the compressed measurement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">dct_res</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="n">dct_fun_compare</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">dct_res</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ii</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span>
-                <span class="nb">len</span><span class="p">(</span><span class="n">arrSNR</span><span class="p">),</span>			<span class="c1"># for each snr level</span>
-                <span class="n">numTrials</span>				<span class="c1"># for each trial</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">arr_snr</span><span class="p">),</span>			<span class="c1"># for each snr level</span>
+                <span class="n">num_trials</span>				<span class="c1"># for each trial</span>
             <span class="p">))})</span>
 
-        <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">snr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arrSNR</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numTrials</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">snr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arr_snr</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_trials</span><span class="p">):</span>
 
                 <span class="c1"># generate ground truth and noisy measurement</span>
                 <span class="n">arrX</span> <span class="o">=</span> <span class="n">fun_x</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
-                <span class="n">arrB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">arrX</span><span class="p">)</span> <span class="o">+</span> <span class="n">funNoise</span><span class="p">(</span><span class="n">snr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_numK</span><span class="p">)</span>
+                <span class="n">arrB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">arrX</span><span class="p">)</span> <span class="o">+</span> <span class="n">fun_noise</span><span class="p">(</span><span class="n">snr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
 
                 <span class="c1"># estimate the sparsity order</span>
                 <span class="n">num_s_est</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">arrB</span><span class="p">)</span>
@@ -728,20 +803,53 @@
         <span class="k">return</span> <span class="n">dct_res</span></div>
 
 <div class="viewcode-block" id="Soe.phase_trans_est_rec"><a class="viewcode-back" href="../../../cs.html#camiba.cs.Soe.phase_trans_est_rec">[docs]</a>    <span class="k">def</span> <span class="nf">phase_trans_est_rec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                            <span class="n">num_s</span><span class="p">,</span>				<span class="c1"># fixed sparsity order</span>
-                            <span class="n">fun_x</span><span class="p">,</span>				<span class="c1"># ground truth generation</span>
-                            <span class="n">args</span><span class="p">,</span>				<span class="c1"># preliminary arguments</span>
-                            <span class="n">arrSNR</span><span class="p">,</span>				<span class="c1"># array for SNR range</span>
-                            <span class="n">funNoise</span><span class="p">,</span>			<span class="c1"># noise generating function</span>
-                            <span class="n">dct_fun_compare</span><span class="p">,</span>  <span class="c1"># function to compare recovery to ground truth</span>
-                            <span class="n">numTrials</span>			<span class="c1"># number of trials for each SNR level</span>
+                            <span class="n">num_s</span><span class="p">,</span>
+                            <span class="n">fun_x</span><span class="p">,</span>
+                            <span class="n">args</span><span class="p">,</span>
+                            <span class="n">arr_snr</span><span class="p">,</span>
+                            <span class="n">fun_noise</span><span class="p">,</span>
+                            <span class="n">dct_fun_compare</span><span class="p">,</span>
+                            <span class="n">num_trials</span>
                             <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            calculate a phase transition where we first do SOE and then</span>
-<span class="sd">            the reconstruction, which might get better with this knowledge</span>
+<span class="sd">            Calculate a phase transition</span>
 
-<span class="sd">            returns a dictionary with keys taken from dictionary of compare</span>
-<span class="sd">            functions</span>
+<span class="sd">        Given the scenario we generate sparse vectors with a certain fixed</span>
+<span class="sd">        sparsity level and according to a provided scheme. Then we apply the</span>
+<span class="sd">        forward model and the compression and add noise to the compressed</span>
+<span class="sd">        measurements, which is generated by a provided noise generating</span>
+<span class="sd">        function. Then we aim a reconstructing the original signal from this</span>
+<span class="sd">        compressed and noisy data, where we also feed the estimated sparsity</span>
+<span class="sd">        order, which is provided by this class as a parameter in the algorithm</span>
+<span class="sd">        for reconstruction. This is done several times for each</span>
+<span class="sd">        level of SNR and after each reconstruction, we compare the</span>
+<span class="sd">        reconstruction with respect to one or more provided error metrics.</span>
+<span class="sd">        Finally everything is saved and returned in a dictionary where the keys</span>
+<span class="sd">        are given by the SNR and the name of the applied error metric.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        num_s : int</span>
+<span class="sd">            sparsity level</span>
+<span class="sd">        fun_x : method</span>
+<span class="sd">            function, which takes the sparsity level as parameter to generate</span>
+<span class="sd">            a sparse vector</span>
+<span class="sd">        args : dict</span>
+<span class="sd">            arguments for the recovery algorithm</span>
+<span class="sd">        arr_snr : ndarray</span>
+<span class="sd">            all level of SNR to go through</span>
+<span class="sd">        fun_noise : ndarray</span>
+<span class="sd">            noise generating function, taking the snr and the vector</span>
+<span class="sd">            size as arguments</span>
+<span class="sd">        dct_fun_compare : dict</span>
+<span class="sd">            dictionary of comparison function</span>
+<span class="sd">        num_trials : int</span>
+<span class="sd">            number of trials to run at each snr level</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            the compressed measurement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># dictionary with results</span>
@@ -750,17 +858,17 @@
         <span class="c1"># initialize with keys from compare function</span>
         <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="n">dct_fun_compare</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">dct_res</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ii</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span>
-                <span class="nb">len</span><span class="p">(</span><span class="n">arrSNR</span><span class="p">),</span>			<span class="c1"># for each snr level</span>
-                <span class="n">numTrials</span>				<span class="c1"># for each trial</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">arr_snr</span><span class="p">),</span>			<span class="c1"># for each snr level</span>
+                <span class="n">num_trials</span>				<span class="c1"># for each trial</span>
             <span class="p">))})</span>
 
         <span class="c1"># g through SNR and trials</span>
-        <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">snr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arrSNR</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numTrials</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">snr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arr_snr</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_trials</span><span class="p">):</span>
 
                 <span class="c1"># generate ground truth and noisy measurement</span>
                 <span class="n">arrX</span> <span class="o">=</span> <span class="n">fun_x</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
-                <span class="n">arrB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">arrX</span><span class="p">)</span> <span class="o">+</span> <span class="n">funNoise</span><span class="p">(</span><span class="n">snr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_numK</span><span class="p">)</span>
+                <span class="n">arrB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">arrX</span><span class="p">)</span> <span class="o">+</span> <span class="n">fun_noise</span><span class="p">(</span><span class="n">snr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
 
                 <span class="c1"># estimate the sparsity order</span>
                 <span class="n">num_s_est</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">arrB</span><span class="p">)</span>

@@ -51,31 +51,70 @@
 
 
 <div class="viewcode-block" id="Scenario"><a class="viewcode-back" href="../../../cs.html#camiba.cs.Scenario">[docs]</a><span class="k">class</span> <span class="nc">Scenario</span><span class="p">:</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">matD</span><span class="p">,</span>
-                 <span class="n">matC</span><span class="p">,</span>
-                 <span class="n">algo</span>
-                 <span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_numN</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_numM</span> <span class="o">=</span> <span class="n">matD</span><span class="o">.</span><span class="n">shape</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_numK</span> <span class="o">=</span> <span class="n">matC</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        General Compressed Sensing Scenario</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_matD</span> <span class="o">=</span> <span class="n">matD</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_matC</span> <span class="o">=</span> <span class="n">matC</span>
+<span class="sd">    This class offers a very convenient but still abstract interface to a</span>
+<span class="sd">    standard compressed sensing scenario, which generally consists of a</span>
+<span class="sd">    dictionary matrix, a compression matrix and a reconstruction scheme</span>
+<span class="sd">    represented by an algorithm.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_matA</span> <span class="o">=</span> <span class="n">matC</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">matD</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mat_D</span><span class="p">,</span> <span class="n">mat_C</span><span class="p">,</span> <span class="n">algo</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            CS Scenario Constructor</span>
+
+<span class="sd">        The user has to specify the dictionary and measurement matrices</span>
+<span class="sd">        and an reconstruction algorithm.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        mat_D : ndarray</span>
+<span class="sd">            dictionary matrix</span>
+<span class="sd">        mat_C : ndarray</span>
+<span class="sd">            compression matrix</span>
+<span class="sd">        algo : method</span>
+<span class="sd">            reconstruction algorithm</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_numM</span> <span class="o">=</span> <span class="n">mat_D</span><span class="o">.</span><span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span> <span class="o">=</span> <span class="n">mat_C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mat_D</span> <span class="o">=</span> <span class="n">mat_D</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mat_C</span> <span class="o">=</span> <span class="n">mat_C</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mat_A</span> <span class="o">=</span> <span class="n">mat_C</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mat_D</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_algo</span> <span class="o">=</span> <span class="n">algo</span>
 
-    <span class="k">def</span> <span class="nf">gen_sparse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                   <span class="n">num_s</span><span class="p">,</span>
-                   <span class="n">entries</span><span class="o">=</span><span class="p">[],</span>
-                   <span class="n">compl</span><span class="o">=</span><span class="kc">False</span>
-                   <span class="p">):</span>
-        <span class="n">dataType</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;float&quot;</span><span class="p">,</span> <span class="s2">&quot;complex&quot;</span><span class="p">][</span><span class="mi">1</span><span class="o">*</span><span class="n">compl</span><span class="p">]</span>
+<div class="viewcode-block" id="Scenario.gen_sparse"><a class="viewcode-back" href="../../../cs.html#camiba.cs.Scenario.gen_sparse">[docs]</a>    <span class="k">def</span> <span class="nf">gen_sparse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_s</span><span class="p">,</span> <span class="n">entries</span><span class="o">=</span><span class="p">[],</span> <span class="n">do_complex</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Generate a Sparse Signal</span>
+
+<span class="sd">        This function generates a sparse ground truth signal according</span>
+<span class="sd">        to the scenarios dimensions of a given sparsity order and makes</span>
+<span class="sd">        use of a certain set of specified elements if provided.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        num_s : int</span>
+<span class="sd">            desired sparsity order</span>
+<span class="sd">        entries : list</span>
+<span class="sd">            list of possible values</span>
+<span class="sd">        do_complex : bool</span>
+<span class="sd">            whether the elements are complex or not</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            the sparse vector</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dataType</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;float&quot;</span><span class="p">,</span> <span class="s2">&quot;complex&quot;</span><span class="p">][</span><span class="mi">1</span> <span class="o">*</span> <span class="n">do_complex</span><span class="p">]</span>
 
         <span class="n">arr_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_numM</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dataType</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">entries</span> <span class="o">==</span> <span class="p">[]:</span>
-            <span class="k">if</span> <span class="n">compl</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">do_complex</span><span class="p">:</span>
                 <span class="n">arr_s</span> <span class="o">=</span> <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">arr_s</span> <span class="o">=</span> <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
@@ -83,16 +122,37 @@
             <span class="n">arr_s</span> <span class="o">=</span> <span class="n">npr</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="n">num_s</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">arr_x</span><span class="p">[</span><span class="n">npr</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_numM</span><span class="p">),</span> <span class="n">num_s</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)]</span> <span class="o">=</span> <span class="n">arr_s</span>
-        <span class="k">return</span> <span class="n">arr_x</span>
+        <span class="k">return</span> <span class="n">arr_x</span></div>
 
-    <span class="k">def</span> <span class="nf">gen_sparse_sep</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">num_s</span><span class="p">,</span>
-        <span class="n">dist</span><span class="p">,</span>
-        <span class="n">entries</span><span class="o">=</span><span class="p">[],</span>
-        <span class="n">do_complex</span><span class="o">=</span><span class="kc">False</span>
-    <span class="p">):</span>
-        <span class="n">dataType</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;float&quot;</span><span class="p">,</span> <span class="s2">&quot;complex&quot;</span><span class="p">][</span><span class="mi">1</span><span class="o">*</span><span class="n">do_complex</span><span class="p">]</span>
+<div class="viewcode-block" id="Scenario.gen_sparse_sep"><a class="viewcode-back" href="../../../cs.html#camiba.cs.Scenario.gen_sparse_sep">[docs]</a>    <span class="k">def</span> <span class="nf">gen_sparse_sep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_s</span><span class="p">,</span> <span class="n">dist</span><span class="p">,</span> <span class="n">entries</span><span class="o">=</span><span class="p">[],</span> <span class="n">do_complex</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Generate a Sparse Signal with Separation Condition</span>
+
+<span class="sd">        This function generates a sparse ground truth signal according</span>
+<span class="sd">        to the scenarios dimensions of a given sparsity order and makes</span>
+<span class="sd">        use of a certain set of specified elements if provided. Moreover,</span>
+<span class="sd">        a separation condition is used to not put support elements closer</span>
+<span class="sd">        than this distance. Ultimatively this generates more &quot;well behaved&quot;</span>
+<span class="sd">        signals in terms of reconstruction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        num_s : int</span>
+<span class="sd">            desired sparsity order</span>
+<span class="sd">        num_dist : int</span>
+<span class="sd">            desired separation distance</span>
+<span class="sd">        entries : list</span>
+<span class="sd">            list of possible values</span>
+<span class="sd">        do_complex : bool</span>
+<span class="sd">            whether the elements are complex or not</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            the sparse signal</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dataType</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;float&quot;</span><span class="p">,</span> <span class="s2">&quot;complex&quot;</span><span class="p">][</span><span class="mi">1</span> <span class="o">*</span> <span class="n">do_complex</span><span class="p">]</span>
 
         <span class="n">arr_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_numM</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dataType</span><span class="p">)</span>
 
@@ -115,71 +175,156 @@
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Could not fit all in! Returning a less sparse x!&quot;</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">arr_x</span>
 
-        <span class="k">return</span> <span class="n">arr_x</span>
+        <span class="k">return</span> <span class="n">arr_x</span></div>
 
-    <span class="k">def</span> <span class="nf">compress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">arr_y</span>
-                 <span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matC</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">arr_y</span><span class="p">)</span>
+<div class="viewcode-block" id="Scenario.compress"><a class="viewcode-back" href="../../../cs.html#camiba.cs.Scenario.compress">[docs]</a>    <span class="k">def</span> <span class="nf">compress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arr_y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Apply Compression</span>
 
-    <span class="k">def</span> <span class="nf">toSignal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">arrX</span>
-                 <span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matD</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">arrX</span><span class="p">)</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        arr_y : ndarray</span>
+<span class="sd">            signal to compress</span>
 
-    <span class="k">def</span> <span class="nf">recover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                <span class="n">arrB</span><span class="p">,</span>
-                <span class="n">args</span>
-                <span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_algo</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_matA</span><span class="p">,</span>
-            <span class="n">arrB</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">args</span>
-        <span class="p">)</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            the compressed measurement</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_C</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">arr_y</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">pipeLine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">arrX</span>
-                 <span class="p">):</span>
-        <span class="n">arrY</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">toSignal</span><span class="p">(</span><span class="n">arrX</span><span class="p">)</span>
-        <span class="n">arrB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">arrY</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">recover</span><span class="p">(</span><span class="n">arrB</span><span class="p">)</span>
+<div class="viewcode-block" id="Scenario.to_signal"><a class="viewcode-back" href="../../../cs.html#camiba.cs.Scenario.to_signal">[docs]</a>    <span class="k">def</span> <span class="nf">to_signal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arr_x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Transform to signal</span>
+
+<span class="sd">        This method takes a sparse vector and multiplies it with the dictionary</span>
+<span class="sd">        to get the acutal signal from its sparse representation. Often this</span>
+<span class="sd">        is called forward model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        arr_x : ndarray</span>
+<span class="sd">            sparse vector</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            the signal</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mat_D</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">arr_x</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scenario.recover"><a class="viewcode-back" href="../../../cs.html#camiba.cs.Scenario.recover">[docs]</a>    <span class="k">def</span> <span class="nf">recover</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arr_b</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Recover a sparse vector</span>
+
+<span class="sd">        Given a measurement and additional arguments for the recovery method</span>
+<span class="sd">        we call this very method and return its result.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        arr_b : ndarray</span>
+<span class="sd">            measurement vector</span>
+<span class="sd">        args : dict</span>
+<span class="sd">            recovery algorithms arguments</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            the sparse reconstructed vector</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_algo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mat_A</span><span class="p">,</span> <span class="n">arr_b</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Scenario.pipeline"><a class="viewcode-back" href="../../../cs.html#camiba.cs.Scenario.pipeline">[docs]</a>    <span class="k">def</span> <span class="nf">pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">arr_x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transform to measurment</span>
+
+<span class="sd">        This method takes a sparse vector and multiplies it with the dictionary</span>
+<span class="sd">        to get the acutal signal from its sparse representation. Often this</span>
+<span class="sd">        is called forward model. Then also the defined compression step is</span>
+<span class="sd">        applied and we implemented the whole pipelein</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        arr_x : ndarray</span>
+<span class="sd">            sparse vector</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            the compressed measurement</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">arr_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_signal</span><span class="p">(</span><span class="n">arr_x</span><span class="p">)</span>
+        <span class="n">arr_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">arr_y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">recover</span><span class="p">(</span><span class="n">arr_b</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Scenario.phase_trans_rec"><a class="viewcode-back" href="../../../cs.html#camiba.cs.Scenario.phase_trans_rec">[docs]</a>    <span class="k">def</span> <span class="nf">phase_trans_rec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                        <span class="n">num_s</span><span class="p">,</span>                <span class="c1"># fixed sparsity order</span>
-                        <span class="n">fun_x</span><span class="p">,</span>                <span class="c1"># function to generate ground truth</span>
-                        <span class="n">args</span><span class="p">,</span>                <span class="c1"># arguments for reconstruction</span>
-                        <span class="n">arrSNR</span><span class="p">,</span>                <span class="c1">#</span>
-                        <span class="n">funNoise</span><span class="p">,</span>            <span class="c1"># function that generates noise</span>
-                        <span class="n">dct_fun_compare</span><span class="p">,</span>    <span class="c1"># comparison functions</span>
-                        <span class="n">numTrials</span>            <span class="c1"># number of trials to run</span>
+                        <span class="n">num_s</span><span class="p">,</span>
+                        <span class="n">fun_x</span><span class="p">,</span>
+                        <span class="n">args</span><span class="p">,</span>
+                        <span class="n">arr_snr</span><span class="p">,</span>
+                        <span class="n">fun_noise</span><span class="p">,</span>
+                        <span class="n">dct_fun_compare</span><span class="p">,</span>
+                        <span class="n">num_trials</span>
                         <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            calculate a phase transition where do the reconstruction</span>
+<span class="sd">            Calculate a phase transition</span>
 
-<span class="sd">            returns a dictionary with keys taken from dictionary of compare</span>
-<span class="sd">            functions</span>
+<span class="sd">        Given the scenario we generate sparse vectors with a certain fixed</span>
+<span class="sd">        sparsity level and according to a provided scheme. Then we apply the</span>
+<span class="sd">        forward model and the compression and add noise to the compressed</span>
+<span class="sd">        measurements, which is generated by a provided noise generating</span>
+<span class="sd">        function. Then we aim a reconstructing the original signal from this</span>
+<span class="sd">        compressed and noisy data. This is done several times for each</span>
+<span class="sd">        level of SNR and after each reconstruction, we compare the</span>
+<span class="sd">        reconstruction with respect to one or more provided error metrics.</span>
+<span class="sd">        Finally everything is saved and returned in a dictionary where the keys</span>
+<span class="sd">        are given by the SNR and the name of the applied error metric.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        num_s : int</span>
+<span class="sd">            sparsity level</span>
+<span class="sd">        fun_x : method</span>
+<span class="sd">            function, which takes the sparsity level as parameter to generate</span>
+<span class="sd">            a sparse vector</span>
+<span class="sd">        args : dict</span>
+<span class="sd">            arguments for the recovery algorithm</span>
+<span class="sd">        arr_snr : ndarray</span>
+<span class="sd">            all level of SNR to go through</span>
+<span class="sd">        fun_noise : ndarray</span>
+<span class="sd">            noise generating function, taking the snr and the vector</span>
+<span class="sd">            size as arguments</span>
+<span class="sd">        dct_fun_compare : dict</span>
+<span class="sd">            dictionary of comparison function</span>
+<span class="sd">        num_trials : int</span>
+<span class="sd">            number of trials to run at each snr level</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ndarray</span>
+<span class="sd">            the compressed measurement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># dictionary of result with keys from dct_fun_compare</span>
         <span class="n">dct_res</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="n">dct_fun_compare</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">dct_res</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ii</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span>
-                <span class="nb">len</span><span class="p">(</span><span class="n">arrSNR</span><span class="p">),</span>            <span class="c1"># for each snr level</span>
-                <span class="n">numTrials</span>                <span class="c1"># for each trial</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">arr_snr</span><span class="p">),</span>            <span class="c1"># for each snr level</span>
+                <span class="n">num_trials</span>                <span class="c1"># for each trial</span>
             <span class="p">))})</span>
 
         <span class="c1"># go through trials and SNR</span>
-        <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">snr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arrSNR</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numTrials</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">snr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arr_snr</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_trials</span><span class="p">):</span>
 
                 <span class="c1"># generate ground truth and noisy measurement</span>
                 <span class="n">arrX</span> <span class="o">=</span> <span class="n">fun_x</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
-                <span class="n">arrB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">arrX</span><span class="p">)</span> <span class="o">+</span> <span class="n">funNoise</span><span class="p">(</span><span class="n">snr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_numK</span><span class="p">)</span>
+                <span class="n">arrB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">arrX</span><span class="p">)</span> <span class="o">+</span> <span class="n">fun_noise</span><span class="p">(</span><span class="n">snr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
 
                 <span class="c1"># do reconstruction</span>
                 <span class="n">arrXEst</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">recover</span><span class="p">(</span><span class="n">arrB</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
 
-                <span class="c1"># apply all the comparision functions and store results</span>
+                <span class="c1"># apply all the comparison functions and store results</span>
                 <span class="k">for</span> <span class="n">kk</span> <span class="ow">in</span> <span class="n">dct_res</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                     <span class="n">key</span> <span class="o">=</span> <span class="n">kk</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                     <span class="n">dct_res</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">ii</span><span class="p">,</span> <span class="n">jj</span><span class="p">]</span> <span class="o">=</span> <span class="n">dct_fun_compare</span><span class="p">[</span><span class="n">key</span><span class="p">](</span><span class="n">arrX</span><span class="p">,</span> <span class="n">arrXEst</span><span class="p">)</span>

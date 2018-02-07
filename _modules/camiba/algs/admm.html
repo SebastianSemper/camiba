@@ -251,7 +251,7 @@
 <span class="sd">    min_[x,u,t] 1/(2n) trace T(u) + 1/2 t</span>
 <span class="sd">    s.t.</span>
 <span class="sd">    [[T(u), x], [x^H, t]] &gt;= 0, ||b - Ax||_2 &lt; z</span>
-<span class="sd">    </span>
+
 <span class="sd">    for given matrix A, vector b and z &gt; 0. Moreover, T(u) maps the tensor of</span>
 <span class="sd">    order l u to a l-level Hermitian Toeplitz matrix defined by u.</span>
 
@@ -315,12 +315,12 @@
         <span class="n">t</span> <span class="o">=</span> <span class="n">Z</span><span class="p">[</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">]</span> <span class="o">+</span> <span class="n">rhoInv</span> <span class="o">*</span> <span class="p">(</span><span class="n">Lb</span><span class="p">[</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">]</span> <span class="o">+</span> <span class="n">tauHalf</span><span class="p">)</span>
 
         <span class="n">x</span> <span class="o">=</span> <span class="n">Inv</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
-                <span class="n">AHy</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">Lb</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">]</span> <span class="o">+</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">Z</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">])</span>
-            <span class="p">)</span>
+            <span class="n">AHy</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">Lb</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">]</span> <span class="o">+</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">Z</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">])</span>
+        <span class="p">)</span>
 
         <span class="n">u</span> <span class="o">=</span> <span class="n">Winv</span> <span class="o">*</span> <span class="p">(</span>
-                <span class="n">ToepAdj</span><span class="p">(</span><span class="n">arr_d</span><span class="p">,</span> <span class="n">Z</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="p">:</span><span class="n">L</span><span class="p">]</span> <span class="o">+</span> <span class="n">rhoInv</span> <span class="o">*</span> <span class="n">Lb</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="p">:</span><span class="n">L</span><span class="p">])</span> <span class="o">+</span> <span class="n">e1</span>
-            <span class="p">)</span>
+            <span class="n">ToepAdj</span><span class="p">(</span><span class="n">arr_d</span><span class="p">,</span> <span class="n">Z</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="p">:</span><span class="n">L</span><span class="p">]</span> <span class="o">+</span> <span class="n">rhoInv</span> <span class="o">*</span> <span class="n">Lb</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="p">:</span><span class="n">L</span><span class="p">])</span> <span class="o">+</span> <span class="n">e1</span>
+        <span class="p">)</span>
 
         <span class="n">T</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="p">:</span><span class="n">L</span><span class="p">]</span> <span class="o">=</span> <span class="n">Toep</span><span class="p">(</span><span class="n">arr_d</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
         <span class="n">T</span><span class="p">[:</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>

@@ -159,7 +159,7 @@
         <span class="k">return</span> <span class="n">spToep</span><span class="p">(</span><span class="n">tenU</span><span class="p">[:</span><span class="n">numN</span><span class="p">]</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span>
 
 
-<div class="viewcode-block" id="ToepAdj"><a class="viewcode-back" href="../../../linalg.html#camiba.linalg.multilevel.ToepAdj">[docs]</a><span class="k">def</span> <span class="nf">ToepAdj</span><span class="p">(</span><span class="n">arrD</span><span class="p">,</span> <span class="n">matA</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="ToepAdj"><a class="viewcode-back" href="../../../linalg.html#camiba.linalg.multilevel.ToepAdj">[docs]</a><span class="k">def</span> <span class="nf">ToepAdj</span><span class="p">(</span><span class="n">arrD</span><span class="p">,</span> <span class="n">mat_A</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Calculate the Adjoint Operator of &lt;T,A&gt;</span>
 
@@ -178,16 +178,16 @@
 <span class="sd">    ndarray</span>
 <span class="sd">        The constructed (sub)matrix as 2D ndarray</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">tenR</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="o">*</span><span class="n">arrD</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">matA</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">tenR</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="o">*</span><span class="n">arrD</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">mat_A</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
 
-    <span class="n">_toepAdjRec</span><span class="p">(</span><span class="n">arrD</span><span class="p">,</span> <span class="n">matA</span><span class="p">,</span> <span class="n">tenR</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+    <span class="n">_toepAdjRec</span><span class="p">(</span><span class="n">arrD</span><span class="p">,</span> <span class="n">mat_A</span><span class="p">,</span> <span class="n">tenR</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">tenR</span></div>
 
 
 <span class="k">def</span> <span class="nf">_toepAdjRec</span><span class="p">(</span>
     <span class="n">arrN</span><span class="p">,</span>               <span class="c1"># dimensions in each level</span>
-    <span class="n">matA</span><span class="p">,</span>               <span class="c1"># defining elements</span>
+    <span class="n">mat_A</span><span class="p">,</span>               <span class="c1"># defining elements</span>
     <span class="n">tenR</span><span class="p">,</span>
     <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span>       <span class="c1"># verbosity flag</span>
 <span class="p">):</span>
@@ -211,7 +211,7 @@
             <span class="k">for</span> <span class="n">mm</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">countBlocks</span><span class="p">):</span>
                 <span class="n">_toepAdjRec</span><span class="p">(</span>
                     <span class="n">arrN</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span>
-                    <span class="n">matA</span><span class="p">[</span>
+                    <span class="n">mat_A</span><span class="p">[</span>
                         <span class="p">(</span><span class="n">mm</span> <span class="o">+</span> <span class="n">nn</span><span class="p">)</span> <span class="o">*</span> <span class="n">arrNprod</span><span class="p">:</span> <span class="p">(</span><span class="n">mm</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">nn</span><span class="p">)</span> <span class="o">*</span> <span class="n">arrNprod</span><span class="p">,</span>
                         <span class="n">mm</span> <span class="o">*</span> <span class="n">arrNprod</span><span class="p">:</span> <span class="p">(</span><span class="n">mm</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">arrNprod</span>
                     <span class="p">],</span>
@@ -220,7 +220,7 @@
                 <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">arrN</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-            <span class="n">tenR</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">matA</span><span class="p">[:(</span><span class="n">arrN</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">ii</span><span class="p">),</span> <span class="n">ii</span><span class="p">:])</span>
+            <span class="n">tenR</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">mat_A</span><span class="p">[:(</span><span class="n">arrN</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">ii</span><span class="p">),</span> <span class="n">ii</span><span class="p">:])</span>
 </pre></div>
 
           </div>
