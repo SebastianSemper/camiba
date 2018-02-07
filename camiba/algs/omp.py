@@ -8,6 +8,7 @@ min ||x||_0 s.t. Ax = b
 for given matrix A and vector b and it is described and analyzed in [OMP]_.
 """
 
+
 import numpy as np
 import numpy.linalg as npl
 
@@ -43,12 +44,11 @@ def recover(
     for ii in range(0, mat_A.shape[1]):
         arr_d[ii] = np.sqrt(np.conj(mat_A[:, ii]).dot(mat_A[:, ii]))
 
-    n = mat_A.shape[0]
-    m = mat_A.shape[1]
-    x = np.zeros(m, dtype=dt_type)
-    S = np.zeros(m, dtype=dt_type)
+    num_m = mat_A.shape[1]
+    x = np.zeros(num_m, dtype=dt_type)
+    S = np.zeros(num_m, dtype=dt_type)
 
-    for i in range(0, num_steps):
+    for ii in range(0, num_steps):
 
         # calc correlation
         r = np.abs(A.conj().T.dot((arr_b - mat_A.dot(x))))/arr_d

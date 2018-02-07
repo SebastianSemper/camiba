@@ -155,7 +155,7 @@ class Soe(Scenario):
                 self._estimate_function = self._true_overlap
 
             # measurement is the KRP of scaled KRP of vandermonde
-            # where we only take the first m rows
+            # where we only take the first num_m rows
             matMeasurement = general.proj_sphere(
                 krp.prod(mat_psi, mat_phi)[:num_m, :]
             )
@@ -242,12 +242,7 @@ class Soe(Scenario):
         else:
             return self._estimate_function(arr_b)
 
-    def _eft_fetch_arr_r(
-        self,
-        num_m,
-        num_n,
-        str_p
-    ):
+    def _eft_fetch_arr_r(self, num_m, num_n, str_p):
         """ Helper function to calculate r and store r helper array"""
 
         if os.path.isfile(str_p+'.npy'):
@@ -580,10 +575,11 @@ class Soe(Scenario):
 
     def _true_overlap(
         self,
-        vec_b		# vector to do SOE on
+        vec_b
     ):
         """
-            estimation routine that reshapes b by reusing some elements according to some overlap
+            estimation routine that reshapes b by reusing some elements
+            according to some overlap
         """
 
         mat_B = self._reshape_measurement(vec_b)
@@ -610,11 +606,7 @@ class Soe(Scenario):
                 return (int(num_d), int(num_n/num_d))
             num_d -= 1
 
-    def _find_block_length(
-        self,
-        num_m,		# the number of measurements we took
-        num_p		# the block advance we chose
-    ):
+    def _find_block_length(self, num_m, num_p):
         """
             Finds the optimal block length num_l
             for given dimensions and block advance
@@ -642,10 +634,7 @@ class Soe(Scenario):
 
         return int(np.round(numT1 ** 2 / numT2))
 
-    def _est_ravazzi(
-        self,
-        vec_b
-    ):
+    def _est_ravazzi(self, vec_b):
         num_s = 10
         num_k = 10
         arr_ka = np.zeros(num_s)

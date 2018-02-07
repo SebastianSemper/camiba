@@ -4,8 +4,6 @@ This module aims at making work with some more specific and but still generally
 applicable stuff way easier.
 """
 
-import os
-import csv
 import numpy as np
 import numpy.linalg as npl
 import numpy.random as npr
@@ -88,9 +86,6 @@ def proj_sphere(X):
     # allocate memory for the result
     mat_Z = np.empty((X.shape[0], X.shape[1]), X.dtype)
 
-    # array for the norms
-    arr_d = np.empty(X.shape[1])
-
     # iterate through the columns
     for ii in range(0, X.shape[1]):
         mat_Z[:, ii] = X[:, ii]/np.sqrt(np.conj(X[:, ii]).dot(X[:, ii]))
@@ -136,13 +131,13 @@ def sampleRIP(mat_X):
     """
 
     # extract the dimensions
-    m = mat_X.shape[0]
+    num_m = mat_X.shape[0]
     N = mat_X.shape[1]
     R = range(0, N)
-    delta = np.zeros(m-1)
+    delta = np.zeros(num_m-1)
 
     # dunno what we are doing here
-    for ii in range(1, m):
+    for ii in range(1, num_m):
         print(ii)
         d = 0
         if ii > 1:
@@ -214,7 +209,7 @@ def arrayToString(x):
     """
         Convert a numpy array to a string
     """
-    x_txt = list(map(lambda tt: str(tt), x.tolist()))
+    x_txt = list(map(lambda tt: str(tt), (x.tolist())))
     x_txt = ",".join(x_txt)
     return x_txt
 

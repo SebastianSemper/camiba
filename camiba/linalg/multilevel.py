@@ -52,14 +52,14 @@ def _toepRecursion(
     numD = arrN.shape[0]
 
     # get size of resulting block toeplitz matrix
-    numN = np.prod(arrN)
+    num_N = np.prod(arrN)
 
     # get an array of all partial sequential products
     # starting at the front
     arrNprod = np.prod(arrN[1:])
 
     # allocate memory for the result
-    T = np.zeros((numN, numN), dtype='complex')
+    T = np.zeros((num_N, num_N), dtype='complex')
 
     # check if we can go a least a level deeper
     if numD > 1:
@@ -108,7 +108,7 @@ def _toepRecursion(
     else:
         # if we are in a lowest level, we just construct the right
         # single level toeplitz block
-        return spToep(tenU[:numN].conj())
+        return spToep(tenU[:num_N].conj())
 
 
 def ToepAdj(arrD, mat_A, verbose=False):
@@ -148,9 +148,6 @@ def _toepAdjRec(
     """
     # number of dimensions in current level
     numD = arrN.shape[0]
-
-    # get size of resulting block toeplitz matrix
-    numN = np.prod(arrN)
 
     # get an array of all partial sequential products
     # starting at the front

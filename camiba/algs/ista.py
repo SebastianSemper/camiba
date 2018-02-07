@@ -51,8 +51,6 @@ def recover(mat_A, arr_b, x_init, num_lambda, num_steps):
         arr_residual = mat_A.dot(arr_x) - arr_b
         residual = npl.norm(arr_residual)
 
-        residual_last = residual
-
         arr_x = soft_thrshld(
             arr_x - 2*num_t * (mat_A.conj().T).dot(arr_residual),
             num_t * num_lambda)

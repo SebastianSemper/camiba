@@ -2,19 +2,12 @@ import os.path
 import math
 
 import numpy as np
-import numpy.random as npr
 import numpy.linalg as npl
 
 from ..linalg.basic import coh
 
 
-def opt_c(
-    num_n,
-    num_m,
-    num_tries,
-    num_samples,
-    str_path
-):
+def opt_c(num_n, num_m, num_tries, num_samples, str_path):
     """
     generate an approximately optimal parameter c for the pack routine
     for a vandermonde matrix of size num_n x num_m and store it into a table

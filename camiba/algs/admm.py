@@ -44,15 +44,15 @@ def bpdn_1d(A, b, x_init, rho, alpha, num_steps):
     ndarray
         approximated solution to BPDN
     """
-    numN, numM = A.shape
+    num_M = A.shape
 
-    x = np.zeros(numM)
+    x = np.zeros(num_M)
     z = np.copy(x_init)
-    u = np.zeros(numM)
+    u = np.zeros(num_M)
 
     AAt = A.dot(A.conj().T)
 
-    P = np.eye(numM) - A.conj().T.dot(npl.solve(AAt, A))
+    P = np.eye(num_M) - A.conj().T.dot(npl.solve(AAt, A))
 
     q = A.conj().T.dot(npl.solve(AAt, b))
 
@@ -237,9 +237,6 @@ def anm_lse_nd(A, AH, AHA, y, rho, tau, num_steps, arr_d):
 
     # extract the shaped
     K, L = A.shape
-
-    # number of dimensions
-    D = len(arr_d.shape)
 
     mat_eye = np.eye(L)
     e1 = -L * .5 * (tau / rho) * mat_eye[0]

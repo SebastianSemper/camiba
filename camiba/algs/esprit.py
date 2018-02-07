@@ -50,6 +50,5 @@ def two_d(mat_cov, num_s):
     ndarray
         extracted frequencies
     """
-    """
 
     return 0
