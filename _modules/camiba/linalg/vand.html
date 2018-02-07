@@ -50,19 +50,12 @@
 <span class="kn">import</span> <span class="nn">math</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">numpy.random</span> <span class="k">as</span> <span class="nn">npr</span>
 <span class="kn">import</span> <span class="nn">numpy.linalg</span> <span class="k">as</span> <span class="nn">npl</span>
 
 <span class="kn">from</span> <span class="nn">..linalg.basic</span> <span class="k">import</span> <span class="n">coh</span>
 
 
-<div class="viewcode-block" id="opt_c"><a class="viewcode-back" href="../../../linalg.html#camiba.linalg.vand.opt_c">[docs]</a><span class="k">def</span> <span class="nf">opt_c</span><span class="p">(</span>
-    <span class="n">num_n</span><span class="p">,</span>
-    <span class="n">num_m</span><span class="p">,</span>
-    <span class="n">num_tries</span><span class="p">,</span>
-    <span class="n">num_samples</span><span class="p">,</span>
-    <span class="n">str_path</span>
-<span class="p">):</span>
+<div class="viewcode-block" id="opt_c"><a class="viewcode-back" href="../../../linalg.html#camiba.linalg.vand.opt_c">[docs]</a><span class="k">def</span> <span class="nf">opt_c</span><span class="p">(</span><span class="n">num_n</span><span class="p">,</span> <span class="n">num_m</span><span class="p">,</span> <span class="n">num_tries</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">,</span> <span class="n">str_path</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    generate an approximately optimal parameter c for the pack routine</span>
 <span class="sd">    for a vandermonde matrix of size num_n x num_m and store it into a table</span>

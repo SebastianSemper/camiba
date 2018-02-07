@@ -100,14 +100,14 @@
     <span class="n">numD</span> <span class="o">=</span> <span class="n">arrN</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="c1"># get size of resulting block toeplitz matrix</span>
-    <span class="n">numN</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">arrN</span><span class="p">)</span>
+    <span class="n">num_N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">arrN</span><span class="p">)</span>
 
     <span class="c1"># get an array of all partial sequential products</span>
     <span class="c1"># starting at the front</span>
     <span class="n">arrNprod</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">arrN</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
 
     <span class="c1"># allocate memory for the result</span>
-    <span class="n">T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">numN</span><span class="p">,</span> <span class="n">numN</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;complex&#39;</span><span class="p">)</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_N</span><span class="p">,</span> <span class="n">num_N</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;complex&#39;</span><span class="p">)</span>
 
     <span class="c1"># check if we can go a least a level deeper</span>
     <span class="k">if</span> <span class="n">numD</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -156,7 +156,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># if we are in a lowest level, we just construct the right</span>
         <span class="c1"># single level toeplitz block</span>
-        <span class="k">return</span> <span class="n">spToep</span><span class="p">(</span><span class="n">tenU</span><span class="p">[:</span><span class="n">numN</span><span class="p">]</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">spToep</span><span class="p">(</span><span class="n">tenU</span><span class="p">[:</span><span class="n">num_N</span><span class="p">]</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span>
 
 
 <div class="viewcode-block" id="ToepAdj"><a class="viewcode-back" href="../../../linalg.html#camiba.linalg.multilevel.ToepAdj">[docs]</a><span class="k">def</span> <span class="nf">ToepAdj</span><span class="p">(</span><span class="n">arrD</span><span class="p">,</span> <span class="n">mat_A</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -196,9 +196,6 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># number of dimensions in current level</span>
     <span class="n">numD</span> <span class="o">=</span> <span class="n">arrN</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-    <span class="c1"># get size of resulting block toeplitz matrix</span>
-    <span class="n">numN</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">arrN</span><span class="p">)</span>
 
     <span class="c1"># get an array of all partial sequential products</span>
     <span class="c1"># starting at the front</span>

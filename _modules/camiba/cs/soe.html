@@ -203,7 +203,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_true_overlap</span>
 
             <span class="c1"># measurement is the KRP of scaled KRP of vandermonde</span>
-            <span class="c1"># where we only take the first m rows</span>
+            <span class="c1"># where we only take the first num_m rows</span>
             <span class="n">matMeasurement</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">proj_sphere</span><span class="p">(</span>
                 <span class="n">krp</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">mat_psi</span><span class="p">,</span> <span class="n">mat_phi</span><span class="p">)[:</span><span class="n">num_m</span><span class="p">,</span> <span class="p">:]</span>
             <span class="p">)</span>
@@ -290,12 +290,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_function</span><span class="p">(</span><span class="n">arr_b</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_eft_fetch_arr_r</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">num_m</span><span class="p">,</span>
-        <span class="n">num_n</span><span class="p">,</span>
-        <span class="n">str_p</span>
-    <span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_eft_fetch_arr_r</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_m</span><span class="p">,</span> <span class="n">num_n</span><span class="p">,</span> <span class="n">str_p</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Helper function to calculate r and store r helper array&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">str_p</span><span class="o">+</span><span class="s1">&#39;.npy&#39;</span><span class="p">):</span>
@@ -628,10 +623,11 @@
 
     <span class="k">def</span> <span class="nf">_true_overlap</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">vec_b</span>		<span class="c1"># vector to do SOE on</span>
+        <span class="n">vec_b</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            estimation routine that reshapes b by reusing some elements according to some overlap</span>
+<span class="sd">            estimation routine that reshapes b by reusing some elements</span>
+<span class="sd">            according to some overlap</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="n">mat_B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reshape_measurement</span><span class="p">(</span><span class="n">vec_b</span><span class="p">)</span>
@@ -658,11 +654,7 @@
                 <span class="k">return</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">num_d</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_n</span><span class="o">/</span><span class="n">num_d</span><span class="p">))</span>
             <span class="n">num_d</span> <span class="o">-=</span> <span class="mi">1</span>
 
-    <span class="k">def</span> <span class="nf">_find_block_length</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">num_m</span><span class="p">,</span>		<span class="c1"># the number of measurements we took</span>
-        <span class="n">num_p</span>		<span class="c1"># the block advance we chose</span>
-    <span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_find_block_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_m</span><span class="p">,</span> <span class="n">num_p</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Finds the optimal block length num_l</span>
 <span class="sd">            for given dimensions and block advance</span>
@@ -690,10 +682,7 @@
 
         <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">numT1</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">numT2</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">_est_ravazzi</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">vec_b</span>
-    <span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_est_ravazzi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vec_b</span><span class="p">):</span>
         <span class="n">num_s</span> <span class="o">=</span> <span class="mi">10</span>
         <span class="n">num_k</span> <span class="o">=</span> <span class="mi">10</span>
         <span class="n">arr_ka</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
