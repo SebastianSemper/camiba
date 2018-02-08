@@ -22,3 +22,7 @@ python setup.py build_doc
 ```
 
 and it will be placed in the `doc/html` subfolder.
+
+## Affiliation
+
+This package is currently developed and maintained at [TU Ilmenau](https://www.tu-ilmenau.de/) at the [EMS-Group](https://www.tu-ilmenau.de/it-ems/) and the [Institute of Mathematics](https://www.tu-ilmenau.de/math/).
