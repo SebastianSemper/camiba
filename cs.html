@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Indices and tables &#8212; &#39;camiba&#39; 0.1.0 documentation</title>
+    <title>Camiba – Compressed Sensing &#8212; &#39;camiba&#39; 0.1.0 documentation</title>
     <link rel="stylesheet" href="_static/traditional.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -24,8 +24,8 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Indices and tables" href="linalg.html" />
-    <link rel="prev" title="References" href="algs.html" /> 
+    <link rel="next" title="Camiba – Linear Algebra" href="linalg.html" />
+    <link rel="prev" title="Camiba – Algorithms" href="algs.html" /> 
   </head>
   <body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -35,10 +35,13 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="linalg.html" title="Indices and tables"
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="linalg.html" title="Camiba – Linear Algebra"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="algs.html" title="References"
+          <a href="algs.html" title="Camiba – Algorithms"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">&#39;camiba&#39; 0.1.0 documentation</a> &#187;</li> 
       </ul>
@@ -49,7 +52,437 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="indices-and-tables">
+  <span class="target" id="module-camiba.cs"><span id="cs"></span></span><div class="section" id="camiba-compressed-sensing">
+<h1>Camiba – Compressed Sensing<a class="headerlink" href="#camiba-compressed-sensing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="scenario">
+<h2>Scenario<a class="headerlink" href="#scenario" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="camiba.cs.Scenario">
+<em class="property">class </em><code class="descclassname">camiba.cs.</code><code class="descname">Scenario</code><span class="sig-paren">(</span><em>mat_D</em>, <em>mat_C</em>, <em>algo</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/cs/scenario.html#Scenario"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.cs.Scenario" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>General Compressed Sensing Scenario</div></blockquote>
+<p>This class offers a very convenient but still abstract interface to a
+standard compressed sensing scenario, which generally consists of a
+dictionary matrix, a compression matrix and a reconstruction scheme
+represented by an algorithm.</p>
+<dl class="method">
+<dt id="camiba.cs.Scenario.compress">
+<code class="descname">compress</code><span class="sig-paren">(</span><em>arr_y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/cs/scenario.html#Scenario.compress"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.cs.Scenario.compress" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Apply Compression</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>arr_y</strong> : ndarray</p>
+<blockquote>
+<div><p>signal to compress</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
+<blockquote class="last">
+<div><p>the compressed measurement</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="camiba.cs.Scenario.gen_sparse">
+<code class="descname">gen_sparse</code><span class="sig-paren">(</span><em>num_s</em>, <em>entries=[]</em>, <em>do_complex=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/cs/scenario.html#Scenario.gen_sparse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.cs.Scenario.gen_sparse" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Generate a Sparse Signal</div></blockquote>
+<p>This function generates a sparse ground truth signal according
+to the scenarios dimensions of a given sparsity order and makes
+use of a certain set of specified elements if provided.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>num_s</strong> : int</p>
+<blockquote>
+<div><p>desired sparsity order</p>
+</div></blockquote>
+<p><strong>entries</strong> : list</p>
+<blockquote>
+<div><p>list of possible values</p>
+</div></blockquote>
+<p><strong>do_complex</strong> : bool</p>
+<blockquote>
+<div><p>whether the elements are complex or not</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
+<blockquote class="last">
+<div><p>the sparse vector</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="camiba.cs.Scenario.gen_sparse_sep">
+<code class="descname">gen_sparse_sep</code><span class="sig-paren">(</span><em>num_s</em>, <em>dist</em>, <em>entries=[]</em>, <em>do_complex=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/cs/scenario.html#Scenario.gen_sparse_sep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.cs.Scenario.gen_sparse_sep" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Generate a Sparse Signal with Separation Condition</div></blockquote>
+<p>This function generates a sparse ground truth signal according
+to the scenarios dimensions of a given sparsity order and makes
+use of a certain set of specified elements if provided. Moreover,
+a separation condition is used to not put support elements closer
+than this distance. Ultimatively this generates more “well behaved”
+signals in terms of reconstruction.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>num_s</strong> : int</p>
+<blockquote>
+<div><p>desired sparsity order</p>
+</div></blockquote>
+<p><strong>num_dist</strong> : int</p>
+<blockquote>
+<div><p>desired separation distance</p>
+</div></blockquote>
+<p><strong>entries</strong> : list</p>
+<blockquote>
+<div><p>list of possible values</p>
+</div></blockquote>
+<p><strong>do_complex</strong> : bool</p>
+<blockquote>
+<div><p>whether the elements are complex or not</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
+<blockquote class="last">
+<div><p>the sparse signal</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="camiba.cs.Scenario.phase_trans_rec">
+<code class="descname">phase_trans_rec</code><span class="sig-paren">(</span><em>num_s</em>, <em>fun_x</em>, <em>args</em>, <em>arr_snr</em>, <em>fun_noise</em>, <em>dct_fun_compare</em>, <em>num_trials</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/cs/scenario.html#Scenario.phase_trans_rec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.cs.Scenario.phase_trans_rec" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Calculate a phase transition</div></blockquote>
+<p>Given the scenario we generate sparse vectors with a certain fixed
+sparsity level and according to a provided scheme. Then we apply the
+forward model and the compression and add noise to the compressed
+measurements, which is generated by a provided noise generating
+function. Then we aim a reconstructing the original signal from this
+compressed and noisy data. This is done several times for each
+level of SNR and after each reconstruction, we compare the
+reconstruction with respect to one or more provided error metrics.
+Finally everything is saved and returned in a dictionary where the keys
+are given by the SNR and the name of the applied error metric.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>num_s</strong> : int</p>
+<blockquote>
+<div><p>sparsity level</p>
+</div></blockquote>
+<p><strong>fun_x</strong> : method</p>
+<blockquote>
+<div><p>function, which takes the sparsity level as parameter to generate
+a sparse vector</p>
+</div></blockquote>
+<p><strong>args</strong> : dict</p>
+<blockquote>
+<div><p>arguments for the recovery algorithm</p>
+</div></blockquote>
+<p><strong>arr_snr</strong> : ndarray</p>
+<blockquote>
+<div><p>all level of SNR to go through</p>
+</div></blockquote>
+<p><strong>fun_noise</strong> : ndarray</p>
+<blockquote>
+<div><p>noise generating function, taking the snr and the vector
+size as arguments</p>
+</div></blockquote>
+<p><strong>dct_fun_compare</strong> : dict</p>
+<blockquote>
+<div><p>dictionary of comparison function</p>
+</div></blockquote>
+<p><strong>num_trials</strong> : int</p>
+<blockquote>
+<div><p>number of trials to run at each snr level</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
+<blockquote class="last">
+<div><p>the compressed measurement</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="camiba.cs.Scenario.pipeline">
+<code class="descname">pipeline</code><span class="sig-paren">(</span><em>arr_x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/cs/scenario.html#Scenario.pipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.cs.Scenario.pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform to measurment</p>
+<p>This method takes a sparse vector and multiplies it with the dictionary
+to get the acutal signal from its sparse representation. Often this
+is called forward model. Then also the defined compression step is
+applied and we implemented the whole pipelein</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>arr_x</strong> : ndarray</p>
+<blockquote>
+<div><p>sparse vector</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
+<blockquote class="last">
+<div><p>the compressed measurement</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="camiba.cs.Scenario.recover">
+<code class="descname">recover</code><span class="sig-paren">(</span><em>arr_b</em>, <em>args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/cs/scenario.html#Scenario.recover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.cs.Scenario.recover" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Recover a sparse vector</div></blockquote>
+<p>Given a measurement and additional arguments for the recovery method
+we call this very method and return its result.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>arr_b</strong> : ndarray</p>
+<blockquote>
+<div><p>measurement vector</p>
+</div></blockquote>
+<p><strong>args</strong> : dict</p>
+<blockquote>
+<div><p>recovery algorithms arguments</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
+<blockquote class="last">
+<div><p>the sparse reconstructed vector</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="camiba.cs.Scenario.to_signal">
+<code class="descname">to_signal</code><span class="sig-paren">(</span><em>arr_x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/cs/scenario.html#Scenario.to_signal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.cs.Scenario.to_signal" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Transform to signal</div></blockquote>
+<p>This method takes a sparse vector and multiplies it with the dictionary
+to get the acutal signal from its sparse representation. Often this
+is called forward model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>arr_x</strong> : ndarray</p>
+<blockquote>
+<div><p>sparse vector</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
+<blockquote class="last">
+<div><p>the signal</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="soe">
+<h2>Soe<a class="headerlink" href="#soe" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="camiba.cs.Soe">
+<em class="property">class </em><code class="descclassname">camiba.cs.</code><code class="descname">Soe</code><span class="sig-paren">(</span><em>num_n</em>, <em>num_m</em>, <em>*args</em>, <em>mos_method='eft'</em>, <em>algorithm=&lt;function recover&gt;</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/cs/soe.html#Soe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.cs.Soe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Here we implement a Class, which provides different methods for sparsity
+order estimation from compressed measurements. Many of them are very good.</p>
+<dl class="method">
+<dt id="camiba.cs.Soe.estimate">
+<code class="descname">estimate</code><span class="sig-paren">(</span><em>arr_b</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/cs/soe.html#Soe.estimate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.cs.Soe.estimate" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Do Sparsity Order Estimation</div></blockquote>
+<p>This function does the acutal SOE process for a given measurement
+and returns the estimated size.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>arr_b</strong> : ndarray</p>
+<blockquote>
+<div><p>one ore several compressed measurements</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
+<blockquote class="last">
+<div><p>the estimated sparsity orders</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="camiba.cs.Soe.phase_trans_est">
+<code class="descname">phase_trans_est</code><span class="sig-paren">(</span><em>num_s</em>, <em>fun_x</em>, <em>arr_snr</em>, <em>fun_noise</em>, <em>dct_fun_compare</em>, <em>num_trials</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/cs/soe.html#Soe.phase_trans_est"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.cs.Soe.phase_trans_est" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Calculate a phase transition</div></blockquote>
+<p>Given the scenario we generate sparse vectors with a certain fixed
+sparsity level and according to a provided scheme. Then we apply the
+forward model and the compression and add noise to the compressed
+measurements, which is generated by a provided noise generating
+function. Here, we only estimate the sparsity order and check if it
+succeeds or fails. This is done several times for each
+level of SNR and after each reconstruction, we compare the
+reconstruction with respect to one or more provided error metrics.
+Finally everything is saved and returned in a dictionary where the keys
+are given by the SNR and the name of the applied error metric.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>num_s</strong> : int</p>
+<blockquote>
+<div><p>sparsity level</p>
+</div></blockquote>
+<p><strong>fun_x</strong> : method</p>
+<blockquote>
+<div><p>function, which takes the sparsity level as parameter to generate
+a sparse vector</p>
+</div></blockquote>
+<p><strong>args</strong> : dict</p>
+<blockquote>
+<div><p>arguments for the recovery algorithm</p>
+</div></blockquote>
+<p><strong>arr_snr</strong> : ndarray</p>
+<blockquote>
+<div><p>all level of SNR to go through</p>
+</div></blockquote>
+<p><strong>fun_noise</strong> : ndarray</p>
+<blockquote>
+<div><p>noise generating function, taking the snr and the vector
+size as arguments</p>
+</div></blockquote>
+<p><strong>dct_fun_compare</strong> : dict</p>
+<blockquote>
+<div><p>dictionary of comparison function</p>
+</div></blockquote>
+<p><strong>num_trials</strong> : int</p>
+<blockquote>
+<div><p>number of trials to run at each snr level</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
+<blockquote class="last">
+<div><p>the compressed measurement</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="camiba.cs.Soe.phase_trans_est_rec">
+<code class="descname">phase_trans_est_rec</code><span class="sig-paren">(</span><em>num_s</em>, <em>fun_x</em>, <em>args</em>, <em>arr_snr</em>, <em>fun_noise</em>, <em>dct_fun_compare</em>, <em>num_trials</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/cs/soe.html#Soe.phase_trans_est_rec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.cs.Soe.phase_trans_est_rec" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Calculate a phase transition</div></blockquote>
+<p>Given the scenario we generate sparse vectors with a certain fixed
+sparsity level and according to a provided scheme. Then we apply the
+forward model and the compression and add noise to the compressed
+measurements, which is generated by a provided noise generating
+function. Then we aim a reconstructing the original signal from this
+compressed and noisy data, where we also feed the estimated sparsity
+order, which is provided by this class as a parameter in the algorithm
+for reconstruction. This is done several times for each
+level of SNR and after each reconstruction, we compare the
+reconstruction with respect to one or more provided error metrics.
+Finally everything is saved and returned in a dictionary where the keys
+are given by the SNR and the name of the applied error metric.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>num_s</strong> : int</p>
+<blockquote>
+<div><p>sparsity level</p>
+</div></blockquote>
+<p><strong>fun_x</strong> : method</p>
+<blockquote>
+<div><p>function, which takes the sparsity level as parameter to generate
+a sparse vector</p>
+</div></blockquote>
+<p><strong>args</strong> : dict</p>
+<blockquote>
+<div><p>arguments for the recovery algorithm</p>
+</div></blockquote>
+<p><strong>arr_snr</strong> : ndarray</p>
+<blockquote>
+<div><p>all level of SNR to go through</p>
+</div></blockquote>
+<p><strong>fun_noise</strong> : ndarray</p>
+<blockquote>
+<div><p>noise generating function, taking the snr and the vector
+size as arguments</p>
+</div></blockquote>
+<p><strong>dct_fun_compare</strong> : dict</p>
+<blockquote>
+<div><p>dictionary of comparison function</p>
+</div></blockquote>
+<p><strong>num_trials</strong> : int</p>
+<blockquote>
+<div><p>number of trials to run at each snr level</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
+<blockquote class="last">
+<div><p>the compressed measurement</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><a class="reference internal" href="index.html#index"><span class="std std-ref">Home Page</span></a></li>
@@ -67,10 +500,10 @@
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="algs.html"
-                        title="previous chapter">References</a></p>
+                        title="previous chapter">Camiba – Algorithms</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="linalg.html"
-                        title="next chapter">Indices and tables</a></p>
+                        title="next chapter">Camiba – Linear Algebra</a></p>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
@@ -92,10 +525,13 @@
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="linalg.html" title="Indices and tables"
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="linalg.html" title="Camiba – Linear Algebra"
              >next</a> |</li>
         <li class="right" >
-          <a href="algs.html" title="References"
+          <a href="algs.html" title="Camiba – Algorithms"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">&#39;camiba&#39; 0.1.0 documentation</a> &#187;</li> 
       </ul>
