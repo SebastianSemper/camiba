@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Camiba – Algorithms &#8212; &#39;camiba&#39; 0.1.0 documentation</title>
+    <title>References &#8212; &#39;camiba&#39; 0.1.0 documentation</title>
     <link rel="stylesheet" href="_static/traditional.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Camiba – Compressed Sensing" href="cs.html" />
+    <link rel="next" title="Indices and tables" href="cs.html" />
     <link rel="prev" title="Home Page" href="index.html" /> 
   </head>
   <body>
@@ -35,10 +35,7 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="cs.html" title="Camiba – Compressed Sensing"
+          <a href="cs.html" title="Indices and tables"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="index.html" title="Home Page"
@@ -52,393 +49,44 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <span class="target" id="module-camiba.algs"><span id="algs"></span></span><div class="section" id="camiba-algorithms">
-<h1>Camiba – Algorithms<a class="headerlink" href="#camiba-algorithms" title="Permalink to this headline">¶</a></h1>
-<p>This submodule aims at providing a rich ensemble of algorithms, which are
-implementend with easy to read code and not many optimizations for rapid
-prototyping and adaption for own more specifically tailored applications.</p>
-<div class="section" id="module-camiba.algs.admm">
-<span id="admm"></span><h2>ADMM<a class="headerlink" href="#module-camiba.algs.admm" title="Permalink to this headline">¶</a></h2>
-<p>This module provides different specialiced implementations of the well known
-method of alternating direction multipliers <a class="reference internal" href="#id6" id="id1">[ADMM]</a>. Since the method
-is so general, many variants exist and many optimizations problems can be
-recast into a problem, which can be solved by a specific ADMM.</p>
-<dl class="function">
-<dt id="camiba.algs.admm.anm_lse_1d">
-<code class="descclassname">camiba.algs.admm.</code><code class="descname">anm_lse_1d</code><span class="sig-paren">(</span><em>A</em>, <em>AH</em>, <em>AHA</em>, <em>y</em>, <em>rho</em>, <em>tau</em>, <em>num_steps</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/algs/admm.html#anm_lse_1d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.algs.admm.anm_lse_1d" title="Permalink to this definition">¶</a></dt>
-<dd><p>Atomic Norm Denoising for 1D Line Spectral Estimation</p>
-<p>This ADMM approximates a solution to</p>
-<p>min_[x,u,t] 1/(2n) trace T(u) + 1/2 t
-s.t.
-[[T(u), x], [x^H, t]] &gt;= 0, ||b - Ax||_2 &lt; z</p>
-<p>for given matrix A, vector b and z &gt; 0. Moreover, T(u) maps the vector
-u to a Hermitian Toeplitz matrix defined by u.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>A</strong> : ndarray</p>
-<blockquote>
-<div><p>system matrix</p>
-</div></blockquote>
-<p><strong>AH</strong> : ndarray</p>
-<blockquote>
-<div><p>Hermitian transpose of system matrix</p>
-</div></blockquote>
-<p><strong>AHA</strong> : ndarray</p>
-<blockquote>
-<div><p>Gram matrix of system matrix</p>
-</div></blockquote>
-<p><strong>b</strong> : ndarray</p>
-<blockquote>
-<div><p>measurement vector</p>
-</div></blockquote>
-<p><strong>rho</strong> : float</p>
-<blockquote>
-<div><p>parameter for augmented lagrangian</p>
-</div></blockquote>
-<p><strong>alpha</strong> : float</p>
-<blockquote>
-<div><p>thresholding parameter</p>
-</div></blockquote>
-<p><strong>num_steps</strong> : int</p>
-<blockquote>
-<div><p>number of steps</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">(ndarray, ndarray, ndarray)</p>
-<blockquote class="last">
-<div><p>x, T(u), t</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="camiba.algs.admm.anm_lse_nd">
-<code class="descclassname">camiba.algs.admm.</code><code class="descname">anm_lse_nd</code><span class="sig-paren">(</span><em>A</em>, <em>AH</em>, <em>AHA</em>, <em>y</em>, <em>rho</em>, <em>tau</em>, <em>num_steps</em>, <em>arr_d</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/algs/admm.html#anm_lse_nd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.algs.admm.anm_lse_nd" title="Permalink to this definition">¶</a></dt>
-<dd><p>Atomic Norm Denoising for 1D Line Spectral Estimation</p>
-<p>This ADMM approximates a solution to</p>
-<p>min_[x,u,t] 1/(2n) trace T(u) + 1/2 t
-s.t.
-[[T(u), x], [x^H, t]] &gt;= 0, ||b - Ax||_2 &lt; z</p>
-<p>for given matrix A, vector b and z &gt; 0. Moreover, T(u) maps the tensor of
-order l u to a l-level Hermitian Toeplitz matrix defined by u.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>A</strong> : ndarray</p>
-<blockquote>
-<div><p>system matrix</p>
-</div></blockquote>
-<p><strong>AH</strong> : ndarray</p>
-<blockquote>
-<div><p>Hermitian transpose of system matrix</p>
-</div></blockquote>
-<p><strong>AHA</strong> : ndarray</p>
-<blockquote>
-<div><p>Gram matrix of system matrix</p>
-</div></blockquote>
-<p><strong>b</strong> : ndarray</p>
-<blockquote>
-<div><p>measurement vector</p>
-</div></blockquote>
-<p><strong>rho</strong> : float</p>
-<blockquote>
-<div><p>parameter for augmented lagrangian</p>
-</div></blockquote>
-<p><strong>alpha</strong> : float</p>
-<blockquote>
-<div><p>thresholding parameter</p>
-</div></blockquote>
-<p><strong>num_steps</strong> : int</p>
-<blockquote>
-<div><p>number of steps</p>
-</div></blockquote>
-<p><strong>arr_d</strong> : ndarray</p>
-<blockquote>
-<div><p>dimension sizes</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">(ndarray, ndarray, ndarray)</p>
-<blockquote class="last">
-<div><p>x, T(u), t</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="camiba.algs.admm.bpdn_1d">
-<code class="descclassname">camiba.algs.admm.</code><code class="descname">bpdn_1d</code><span class="sig-paren">(</span><em>A</em>, <em>b</em>, <em>x_init</em>, <em>rho</em>, <em>alpha</em>, <em>num_steps</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/algs/admm.html#bpdn_1d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.algs.admm.bpdn_1d" title="Permalink to this definition">¶</a></dt>
-<dd><p>Basis Pursuit Denoising</p>
-<p>For given matrix A, vector b and z &gt; 0, ADDM approximates a solution to</p>
-<p>min ||x||_1 s.t. ||A * x - b||_2 &lt; z.</p>
-<p>The algorithm needs a thresholding parameter, an initial guess for a
-solution and a parameter for the augmented lagrangian.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>A</strong> : ndarray</p>
-<blockquote>
-<div><p>system matrix</p>
-</div></blockquote>
-<p><strong>b</strong> : ndarray</p>
-<blockquote>
-<div><p>measurement vector</p>
-</div></blockquote>
-<p><strong>x_init</strong> : ndarray</p>
-<blockquote>
-<div><p>initial solution guess</p>
-</div></blockquote>
-<p><strong>rho</strong> : float</p>
-<blockquote>
-<div><p>parameter for augmented lagrangian</p>
-</div></blockquote>
-<p><strong>alpha</strong> : float</p>
-<blockquote>
-<div><p>thresholding parameter</p>
-</div></blockquote>
-<p><strong>num_steps</strong> : int</p>
-<blockquote>
-<div><p>number of steps</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
-<blockquote class="last">
-<div><p>approximated solution to BPDN</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-<div class="section" id="module-camiba.algs.iht">
-<span id="iht"></span><h2>IHT<a class="headerlink" href="#module-camiba.algs.iht" title="Permalink to this headline">¶</a></h2>
-<p>Provides the Iterative Hard Thresholding Algorithm to approximate a solution
-to the l_0-minimization problem, which reads as</p>
-<p>min ||x||_0 s.t. Ax = b</p>
-<p>for given matrix A and vector b and it is described and analyzed in <a class="reference internal" href="#id7" id="id2">[IHT]</a>.</p>
-<dl class="function">
-<dt id="camiba.algs.iht.recover">
-<code class="descclassname">camiba.algs.iht.</code><code class="descname">recover</code><span class="sig-paren">(</span><em>mat_A</em>, <em>arr_b</em>, <em>num_maxsteps</em>, <em>num_k</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/algs/iht.html#recover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.algs.iht.recover" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div>IHT Algorithm</div></blockquote>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>mat_A</strong> : ndarray</p>
-<blockquote>
-<div><p>system matrix</p>
-</div></blockquote>
-<p><strong>arr_b</strong> : ndarray</p>
-<blockquote>
-<div><p>measurement vector</p>
-</div></blockquote>
-<p><strong>num_steps</strong> : int</p>
-<blockquote>
-<div><p>iteration steps</p>
-</div></blockquote>
-<p><strong>num_k</strong> : int</p>
-<blockquote>
-<div><p>thresholding parameter</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
-<blockquote class="last">
-<div><p>estimated sparse solution</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-<div class="section" id="module-camiba.algs.irls">
-<span id="irls"></span><h2>IRLS<a class="headerlink" href="#module-camiba.algs.irls" title="Permalink to this headline">¶</a></h2>
-<p>Implements the algorithm of iteratively reweighted least squares
-for approximating a solution to a l_0-minimization problem, which reads as</p>
-<p>min ||x||_0 s.t. Ax = b</p>
-<p>for given matrix A and vector b and it is described and analyzed in <a class="reference internal" href="#id8" id="id3">[IRLS]</a>.</p>
-<dl class="function">
-<dt id="camiba.algs.irls.recover">
-<code class="descclassname">camiba.algs.irls.</code><code class="descname">recover</code><span class="sig-paren">(</span><em>mat_A</em>, <em>arr_b</em>, <em>num_eps</em>, <em>num_s</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/algs/irls.html#recover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.algs.irls.recover" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div>Iteratively Reweighted Least Squares</div></blockquote>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>mat_A</strong> : ndarray</p>
-<blockquote>
-<div><p>system matrix</p>
-</div></blockquote>
-<p><strong>arr_b</strong> : ndarray</p>
-<blockquote>
-<div><p>measurement vector</p>
-</div></blockquote>
-<p><strong>num_eps</strong> : float</p>
-<blockquote>
-<div><p>stopping criterion</p>
-</div></blockquote>
-<p><strong>num_steps</strong> : int</p>
-<blockquote>
-<div><p>iteration steps</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
-<blockquote class="last">
-<div><p>estimated sparse solution</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-<div class="section" id="module-camiba.algs.ista">
-<span id="ista"></span><h2>ISTA<a class="headerlink" href="#module-camiba.algs.ista" title="Permalink to this headline">¶</a></h2>
-<p>Implements the algorithm of iterative soft thresholding
-for approximating a solution to a l_1-minimization problem, which reads as</p>
-<p>min ||x||_a + lambda * ||Ax - b||_2^2</p>
-<p>for given matrix A and vector b and it is described and analyzed in <a class="reference internal" href="#id9" id="id4">[ISTA]</a>.</p>
-<dl class="function">
-<dt id="camiba.algs.ista.recover">
-<code class="descclassname">camiba.algs.ista.</code><code class="descname">recover</code><span class="sig-paren">(</span><em>mat_A</em>, <em>arr_b</em>, <em>x_init</em>, <em>num_lambda</em>, <em>num_steps</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/algs/ista.html#recover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.algs.ista.recover" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div>Iterative Soft Thresholding Algorithm</div></blockquote>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>mat_A</strong> : ndarray</p>
-<blockquote>
-<div><p>system matrix</p>
-</div></blockquote>
-<p><strong>arr_b</strong> : ndarray</p>
-<blockquote>
-<div><p>measurement vector</p>
-</div></blockquote>
-<p><strong>x_init</strong> : ndarray</p>
-<blockquote>
-<div><p>initial solution guess</p>
-</div></blockquote>
-<p><strong>num_lambda</strong> : int</p>
-<blockquote>
-<div><p>thresholding parameter</p>
-</div></blockquote>
-<p><strong>num_steps</strong> : int</p>
-<blockquote>
-<div><p>iteration steps</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
-<blockquote class="last">
-<div><p>estimated sparse solution</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-<div class="section" id="module-camiba.algs.omp">
-<span id="omp"></span><h2>OMP<a class="headerlink" href="#module-camiba.algs.omp" title="Permalink to this headline">¶</a></h2>
-<p>Provides the Orthogonal Matching Pursuit Algorithm to approximate a solution
-to the l_0-minimization problem, which reads as</p>
-<p>min ||x||_0 s.t. Ax = b</p>
-<p>for given matrix A and vector b and it is described and analyzed in <a class="reference internal" href="#id10" id="id5">[OMP]</a>.</p>
-<dl class="function">
-<dt id="camiba.algs.omp.recover">
-<code class="descclassname">camiba.algs.omp.</code><code class="descname">recover</code><span class="sig-paren">(</span><em>mat_A</em>, <em>arr_b</em>, <em>num_steps</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/algs/omp.html#recover"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.algs.omp.recover" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div>Orthogonal Matching Pursuit Algorithm</div></blockquote>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>mat_A</strong> : ndarray</p>
-<blockquote>
-<div><p>system matrix</p>
-</div></blockquote>
-<p><strong>arr_b</strong> : ndarray</p>
-<blockquote>
-<div><p>measurement vector</p>
-</div></blockquote>
-<p><strong>num_steps</strong> : int</p>
-<blockquote>
-<div><p>iteration steps</p>
-</div></blockquote>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
-<blockquote class="last">
-<div><p>estimated sparse solution</p>
-</div></blockquote>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="references">
+  <div class="section" id="references">
 <h1>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h1>
-<table class="docutils citation" frame="void" id="id6" rules="none">
+<table class="docutils citation" frame="void" id="admm" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[ADMM]</a></td><td>Distributed optimization and statistical learning via the alternating
+<tr><td class="label">[ADMM]</td><td>Distributed optimization and statistical learning via the alternating
 direction method of multipliers
 S. Boyd, N. Parikh, E. Chu, B. Peleato, and J. Eckstein, 2011</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="id7" rules="none">
+<table class="docutils citation" frame="void" id="iht" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[IHT]</a></td><td>Iterative Hard Thresholding for Compressed Sensing
+<tr><td class="label">[IHT]</td><td>Iterative Hard Thresholding for Compressed Sensing
 Thomas Blumensath, Mike E. Davies
 arXiv:0805.0510</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="id8" rules="none">
+<table class="docutils citation" frame="void" id="irls" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3">[IRLS]</a></td><td>Iteratively reweighted least squares minimization for sparse recovery
+<tr><td class="label">[IRLS]</td><td>Iteratively reweighted least squares minimization for sparse recovery
 Daubechies, I.; Devore, R.; Fornasier, M.; Güntürk
 Communications on Pure and Applied Mathematics</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="id9" rules="none">
+<table class="docutils citation" frame="void" id="ista" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id4">[ISTA]</a></td><td>An iterative thresholding algorithm for linear inverse problems with
+<tr><td class="label">[ISTA]</td><td>An iterative thresholding algorithm for linear inverse problems with
 a sparsity constraint
 Ingrid Daubechies (Princeton University, USA), Michel Defrise (Vrije Universiteit Brussel, Belgium), Christine De Mol (Universite Libre de Bruxelles, Belgium)</td></tr>
 </tbody>
 </table>
-<table class="docutils citation" frame="void" id="id10" rules="none">
+<table class="docutils citation" frame="void" id="omp" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id5">[OMP]</a></td><td>Orthogonal matching pursuit: recursive function approximation
+<tr><td class="label">[OMP]</td><td>Orthogonal matching pursuit: recursive function approximation
 with applications to wavelet decomposition
 Y. C. Pati, R. Rezaiifar and P. S. Krishnaprasad
 Proceedings of 27th Asilomar Conference on Signals, Systems and Computers</td></tr>
@@ -466,7 +114,7 @@ Proceedings of 27th Asilomar Conference on Signals, Systems and Computers</td></
                         title="previous chapter">Home Page</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="cs.html"
-                        title="next chapter">Camiba – Compressed Sensing</a></p>
+                        title="next chapter">Indices and tables</a></p>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
@@ -488,10 +136,7 @@ Proceedings of 27th Asilomar Conference on Signals, Systems and Computers</td></
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="cs.html" title="Camiba – Compressed Sensing"
+          <a href="cs.html" title="Indices and tables"
              >next</a> |</li>
         <li class="right" >
           <a href="index.html" title="Home Page"
