@@ -56,9 +56,10 @@
 <span class="sd">for given matrix A and vector b and it is described and analyzed in [OMP]_.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.linalg</span> <span class="k">as</span> <span class="nn">npl</span>
+<span class="kn">from</span> <span class="nn">..linalg.basic</span> <span class="k">import</span> <span class="n">aB</span>
+<span class="kn">from</span> <span class="nn">..linalg.basic</span> <span class="k">import</span> <span class="n">H</span>
 
 
 <div class="viewcode-block" id="recover"><a class="viewcode-back" href="../../../algs.html#camiba.algs.omp.recover">[docs]</a><span class="k">def</span> <span class="nf">recover</span><span class="p">(</span>
@@ -85,7 +86,7 @@
 <span class="sd">        estimated sparse solution</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">dt_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">promote_types</span><span class="p">(</span><span class="n">arr_b</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">mat_a</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">dt_type</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">promote_types</span><span class="p">(</span><span class="n">arr_b</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">mat_A</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
 
     <span class="c1"># generate array for reweighting the matrix A</span>
     <span class="n">arr_d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">mat_A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dt_type</span><span class="p">)</span>
@@ -99,21 +100,21 @@
     <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num_steps</span><span class="p">):</span>
 
         <span class="c1"># calc correlation</span>
-        <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">((</span><span class="n">arr_b</span> <span class="o">-</span> <span class="n">mat_A</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">))))</span><span class="o">/</span><span class="n">arr_d</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">mat_A</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">((</span><span class="n">arr_b</span> <span class="o">-</span> <span class="n">mat_A</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">))))</span><span class="o">/</span><span class="n">arr_d</span>
 
         <span class="c1"># add maximal correlation to supprt</span>
         <span class="n">S</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">r</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">S</span><span class="p">))]</span> <span class="o">+=</span> <span class="mi">1</span>
 
         <span class="c1"># generate matrices with columns restricted to support</span>
-        <span class="n">mat_A_S</span> <span class="o">=</span> <span class="n">mat_A</span><span class="p">[:,</span> <span class="n">csg</span><span class="o">.</span><span class="n">aB</span><span class="p">(</span><span class="n">S</span><span class="p">)]</span>
-        <span class="n">mat_B_S</span> <span class="o">=</span> <span class="n">csg</span><span class="o">.</span><span class="n">H</span><span class="p">(</span><span class="n">mat_A_S</span><span class="p">)</span>
+        <span class="n">mat_A_S</span> <span class="o">=</span> <span class="n">mat_A</span><span class="p">[:,</span> <span class="n">aB</span><span class="p">(</span><span class="n">S</span><span class="p">)]</span>
+        <span class="n">mat_B_S</span> <span class="o">=</span> <span class="n">H</span><span class="p">(</span><span class="n">mat_A_S</span><span class="p">)</span>
 
         <span class="c1"># solve approximation problem with</span>
         <span class="c1"># pseudo-inverse on current support</span>
         <span class="n">x_S</span> <span class="o">=</span> <span class="n">npl</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">mat_B_S</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mat_A_S</span><span class="p">),</span> <span class="n">mat_B_S</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">arr_b</span><span class="p">))</span>
 
         <span class="n">x</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">x</span><span class="p">[</span><span class="n">csg</span><span class="o">.</span><span class="n">aB</span><span class="p">(</span><span class="n">S</span><span class="p">)]</span> <span class="o">=</span> <span class="n">x_S</span>
+        <span class="n">x</span><span class="p">[</span><span class="n">aB</span><span class="p">(</span><span class="n">S</span><span class="p">)]</span> <span class="o">=</span> <span class="n">x_S</span>
 
     <span class="c1"># renormalize x before returning</span>
     <span class="k">return</span> <span class="n">x</span></div>
