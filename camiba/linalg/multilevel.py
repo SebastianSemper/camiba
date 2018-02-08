@@ -27,9 +27,7 @@ def Toep(tenU, verbose=False):
     return T - 1j*np.eye(np.prod(arrD))*np.imag(T[0, 0])
 
 
-def _toepRecursion(
-    arrN, tenU, verbose=False
-):
+def _toepRecursion(arrN, tenU, verbose=False):
     """
         Recursion during Multilevel Toeplitz Construction
 
@@ -137,12 +135,7 @@ def ToepAdj(arrD, mat_A, verbose=False):
     return tenR
 
 
-def _toepAdjRec(
-    arrN,               # dimensions in each level
-    mat_A,               # defining elements
-    tenR,
-    verbose=False       # verbosity flag
-):
+def _toepAdjRec(arrN, mat_A, tenR, verbose=False):
     """
         Recursion for the Adjoint of <T,A>
     """

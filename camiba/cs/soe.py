@@ -32,6 +32,7 @@ class Soe(Scenario):
             self,
             num_n,
             num_m,
+            *args,
             mos_method='eft',
             algorithm=omp.recover,
             **kwargs
@@ -205,7 +206,7 @@ class Soe(Scenario):
                 )
 
         # now create the cs scenario
-        sc.Scenario.__init__(
+        Scenario.__init__(
             self,						# yay!
             np.eye(num_n),				# during soe the dictionary is the
             # identity matrix, i.e. the vector
@@ -340,7 +341,8 @@ class Soe(Scenario):
             arr_eta = np.zeros(self._num_q)
             for ii in range(0, self._num_q):
                 ind_eta = 0
-                while mat_FA_prb[ind_eta, ii] > num_err_prob and ind_eta + 2 < res_eta:
+                while (mat_FA_prb[ind_eta, ii] > num_err_prob
+                        and ind_eta + 2 < res_eta):
                     ind_eta += 1
 
                 # print(mat_FA_prb[ind_eta,ii])
@@ -495,7 +497,10 @@ class Soe(Scenario):
 
         # do the reshapig with overlap
         for ii in range(0, self._num_k):
-            mat_B[:, ii] = vec_b[(ii*self._num_p)                                 :(ii*self._num_p + self._num_l)]
+            mat_B[:, ii] = vec_b[
+                        (ii*self._num_p):
+                        (ii*self._num_p + self._num_l)
+                    ]
 
         return mat_B
 
@@ -506,11 +511,8 @@ class Soe(Scenario):
         arr_sv = npl.svd(mat_B, compute_uv=0)
         N = len(arr_sv)
         for ii in range(N-1):
-            #print((arr_sv[N-ii-2] / arr_sv[N - ii - 1]) , self._arr_eta[N-ii-2])
             if (arr_sv[N-ii-2] / arr_sv[N - ii - 1]) > self._arr_eta[N-ii-2]:
                 return N - ii - 1
-            # else:
-                # print('BOOOM')
         return 1
 
     def _do_eft(
@@ -538,10 +540,7 @@ class Soe(Scenario):
 
         return 0
 
-    def _do_new(
-        self,
-        mat_B
-    ):
+    def _do_new(self, mat_B):
 
         # get the singular values
         arr_SV = npl.svd(mat_B, compute_uv=0)**2
@@ -551,19 +550,18 @@ class Soe(Scenario):
         for ii in range(num_P - 1):
             quot = (arr_SV[num_P - 2 - ii] /
                     np.mean(arr_SV[(num_P - 1 - ii):]))
-            if quot > self._arr_eta[num_P - 2 - ii, 1] or quot < self._arr_eta[num_P - 2 - ii, 0]:
+            if (quot > self._arr_eta[num_P - 2 - ii, 1]
+                    or quot < self._arr_eta[num_P - 2 - ii, 0]):
                 return num_P - 1 - ii
 
         return 1
 
-    def _nope_overlap(
-        self,
-        vec_b
-    ):
+
+    def _nope_overlap(self, vec_b):
         """	estimation routine that reshapes b without
             reuing any elements.
         """
-        mat_B = vec_b.reshape(self._num_l, self._num_k)
+        mat_B=vec_b.reshape(self._num_l, self._num_k)
 
         # initiate the model order selection
         if self._mos_method == 'eft':
@@ -573,16 +571,14 @@ class Soe(Scenario):
         elif self._mos_method == 'new':
             return self._do_new(mat_B)
 
-    def _true_overlap(
-        self,
-        vec_b
-    ):
+
+    def _true_overlap(self, vec_b):
         """
             estimation routine that reshapes b by reusing some elements
             according to some overlap
         """
 
-        mat_B = self._reshape_measurement(vec_b)
+        mat_B=self._reshape_measurement(vec_b)
 
         # initiate the model order selection
         if self._mos_method == 'eft':
@@ -591,6 +587,7 @@ class Soe(Scenario):
             return self._do_eet(mat_B)
         elif self._mos_method == 'new':
             return self._do_new(mat_B)
+
 
     def _largest_div(
         self,
@@ -600,11 +597,12 @@ class Soe(Scenario):
             Calculates the largest divisor of a natural number num_n
         """
 
-        num_d = math.ceil(math.sqrt(num_n))
+        num_d=math.ceil(math.sqrt(num_n))
         while True:
             if num_n % num_d == 0:
                 return (int(num_d), int(num_n/num_d))
             num_d -= 1
+
 
     def _find_block_length(self, num_m, num_p):
         """
@@ -612,9 +610,9 @@ class Soe(Scenario):
             for given dimensions and block advance
         """
 
-        num_l_init = int(math.ceil((float(num_m) + float(num_p))/(num_p+1.0)))
-        num_l1 = num_l_init
-        num_l2 = num_l_init - 1
+        num_l_init=int(math.ceil((float(num_m) + float(num_p))/(num_p+1.0)))
+        num_l1=num_l_init
+        num_l2=num_l_init - 1
         while True:
             if (num_m - num_l1) % num_p == 0:
                 return int(num_l1)
@@ -625,49 +623,49 @@ class Soe(Scenario):
             num_l1 += 1
             num_l2 -= 1
 
-    def _est_lopes(
-        self,
-        vec_b
-    ):
-        numT1 = np.median(np.abs(vec_b[: self.num_m1])) / self._num_gamma
-        numT2 = np.mean(vec_b[self.num_m1:] ** 2) / (self._num_gamma ** 2)
+
+    def _est_lopes(self, vec_b):
+        numT1=np.median(np.abs(vec_b[: self.num_m1])) / self._num_gamma
+        numT2=np.mean(vec_b[self.num_m1:] ** 2) / (self._num_gamma ** 2)
 
         return int(np.round(numT1 ** 2 / numT2))
 
-    def _est_ravazzi(self, vec_b):
-        num_s = 10
-        num_k = 10
-        arr_ka = np.zeros(num_s)
-        arr_pi = np.zeros((self._num_k, num_s))
-        arr_al = np.zeros(num_s)
-        arr_be = np.zeros(num_s)
-        arr_pe = np.zeros(num_s)
 
-        arr_pi[:, 0] = 0.5
-        arr_al[0] = 500
-        arr_pe[0] = 0.01
-        arr_be[0] = 200
+    def _est_ravazzi(self, vec_b):
+        num_s=10
+        num_k=10
+        arr_ka=np.zeros(num_s)
+        arr_pi=np.zeros((self._num_k, num_s))
+        arr_al=np.zeros(num_s)
+        arr_be=np.zeros(num_s)
+        arr_pe=np.zeros(num_s)
+
+        arr_pi[:, 0]=0.5
+        arr_al[0]=500
+        arr_pe[0]=0.01
+        arr_be[0]=200
 
         for ii in range(num_s - 1):
             # E-step
-            q1 = (arr_pe[ii])/np.sqrt(arr_al[ii])
-            q2 = (1 - arr_pe[ii])/np.sqrt(arr_be[ii])
-            e1 = np.exp(- vec_b ** 2 / (2 * arr_al[ii]))
-            e2 = np.exp(- vec_b ** 2 / (2 * arr_be[ii]))
-            arr_pi[:, ii + 1] = (q1 * e1)/(q1 * e1 + q2 * e2)
+            q1=(arr_pe[ii])/np.sqrt(arr_al[ii])
+            q2=(1 - arr_pe[ii])/np.sqrt(arr_be[ii])
+            e1=np.exp(- vec_b ** 2 / (2 * arr_al[ii]))
+            e2=np.exp(- vec_b ** 2 / (2 * arr_be[ii]))
+            arr_pi[:, ii + 1]=(q1 * e1)/(q1 * e1 + q2 * e2)
 
             # M-Step
-            sum1 = np.sum(arr_pi[:, ii + 1])
-            sum2 = np.sum(1 - arr_pi[:, ii + 1])
-            arr_pe[ii + 1] = sum1 / self._num_k
-            arr_ka[ii + 1] = np.log(arr_pe[ii + 1]) \
+            sum1=np.sum(arr_pi[:, ii + 1])
+            sum2=np.sum(1 - arr_pi[:, ii + 1])
+            arr_pe[ii + 1]=sum1 / self._num_k
+            arr_ka[ii + 1]=np.log(arr_pe[ii + 1]) \
                 / np.log(1 - self._num_gamma)
 
-            arr_al[ii + 1] = np.inner(arr_pi[:, ii + 1], vec_b ** 2) / sum1
-            arr_be[ii + 1] = np.inner(1 - arr_pi[:, ii + 1], vec_b ** 2) / sum2
+            arr_al[ii + 1]=np.inner(arr_pi[:, ii + 1], vec_b ** 2) / sum1
+            arr_be[ii + 1]=np.inner(1 - arr_pi[:, ii + 1], vec_b ** 2) / sum2
             print(arr_ka[ii+1])
 
         return int(arr_ka[num_s - 1])
+
 
     def phase_trans_est(self,
                         num_s,
@@ -715,7 +713,7 @@ class Soe(Scenario):
         ndarray
             the compressed measurement
         """
-        dct_res = {}
+        dct_res={}
         for ii in dct_fun_compare.items():
             dct_res.update({ii[0]: np.zeros((
                 len(arr_snr),			# for each snr level
@@ -726,22 +724,23 @@ class Soe(Scenario):
             for jj in range(num_trials):
 
                 # generate ground truth and noisy measurement
-                arrX = fun_x(num_s)
-                arrB = self.compress(arrX) + fun_noise(snr, self._num_k)
+                arrX=fun_x(num_s)
+                arrB=self.compress(arrX) + fun_noise(snr, self._num_k)
 
                 # estimate the sparsity order
-                num_s_est = self.estimate(arrB)
+                num_s_est=self.estimate(arrB)
 
                 for kk in dct_res.items():
-                    key = kk[0]
-                    dct_res[key][ii, jj] = dct_fun_compare[key](
+                    key=kk[0]
+                    dct_res[key][ii, jj]=dct_fun_compare[key](
                         arrX, num_s_est)
 
         for ii in dct_res.items():
-            key = ii[0]
-            dct_res[key] = np.mean(dct_res[key], axis=1)
+            key=ii[0]
+            dct_res[key]=np.mean(dct_res[key], axis=1)
 
         return dct_res
+
 
     def phase_trans_est_rec(self,
                             num_s,
@@ -794,7 +793,7 @@ class Soe(Scenario):
         """
 
         # dictionary with results
-        dct_res = {}
+        dct_res={}
 
         # initialize with keys from compare function
         for ii in dct_fun_compare.items():
@@ -808,28 +807,28 @@ class Soe(Scenario):
             for jj in range(num_trials):
 
                 # generate ground truth and noisy measurement
-                arrX = fun_x(num_s)
-                arrB = self.compress(arrX) + fun_noise(snr, self._num_k)
+                arrX=fun_x(num_s)
+                arrB=self.compress(arrX) + fun_noise(snr, self._num_k)
 
                 # estimate the sparsity order
-                num_s_est = self.estimate(arrB)
+                num_s_est=self.estimate(arrB)
 
                 # add the estimated order to the params of the recovery
                 # TODO: update it if already present
-                args.update({'num_k': num_s_est})
+                args.update({'num_steps': num_s_est})
 
                 # do recovery with estimated sparsity
-                arr_x_est = self.recover(arrB, args)
+                arr_x_est=self.recover(arrB, args)
 
                 # write all the results into the appropriate place
                 for kk in dct_res.items():
-                    key = kk[0]
-                    dct_res[key][ii, jj] = dct_fun_compare[key](
+                    key=kk[0]
+                    dct_res[key][ii, jj]=dct_fun_compare[key](
                         arrX, arr_x_est)
 
         # calculate
         for ii in dct_res.items():
-            key = ii[0]
-            dct_res[key] = np.mean(dct_res[key], axis=1)
+            key=ii[0]
+            dct_res[key]=np.mean(dct_res[key], axis=1)
 
         return dct_res

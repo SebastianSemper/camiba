@@ -29,7 +29,7 @@ class Scenario:
         algo : method
             reconstruction algorithm
         """
-        self._num_n, self._num_M = mat_D.shape
+        self._num_n, self._num_m = mat_D.shape
         self._num_k = mat_C.shape[0]
 
         self._mat_D = mat_D
@@ -64,7 +64,7 @@ class Scenario:
         """
         dataType = ["float", "complex"][1 * do_complex]
 
-        arr_x = np.zeros(self._num_M, dtype=dataType)
+        arr_x = np.zeros(self._num_m, dtype=dataType)
         if entries == []:
             if do_complex:
                 arr_s = npr.randn(num_s) + 1j*npr.randn(num_s)
@@ -73,7 +73,7 @@ class Scenario:
         else:
             arr_s = npr.choice(entries, num_s, replace=True)
 
-        arr_x[npr.choice(range(self._num_M), num_s, replace=False)] = arr_s
+        arr_x[npr.choice(range(self._num_m), num_s, replace=False)] = arr_s
         return arr_x
 
     def gen_sparse_sep(self, num_s, dist, entries=[], do_complex=False):
@@ -106,9 +106,9 @@ class Scenario:
         """
         dataType = ["float", "complex"][1 * do_complex]
 
-        arr_x = np.zeros(self._num_M, dtype=dataType)
+        arr_x = np.zeros(self._num_m, dtype=dataType)
 
-        arr_possible = np.array(range(self._num_M), dtype='int')
+        arr_possible = np.array(range(self._num_m), dtype='int')
 
         for ii in range(num_s):
             prob = npr.choice(arr_possible, 1, replace=False)

@@ -34,7 +34,6 @@ def recover(mat_A, arr_b, num_eps, num_s, verbose=0):
         estimated sparse solution
     """
 
-    num_s = int(num_s)
     num_n, num_m = mat_A.shape
     arr_w = np.ones(num_m)
     num_thrs = 1
@@ -53,6 +52,6 @@ def recover(mat_A, arr_b, num_eps, num_s, verbose=0):
         if verbose == 1:
             print(num_thrs)
         arr_w = 1/np.sqrt(np.abs(arr_x)**2 + num_thrs**2)
-        num_steps += 1
+        num_s += 1
 
     return(arr_x*(np.abs(arr_x) > num_eps*(-np.sort(-arr_x))[num_s]))

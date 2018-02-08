@@ -1,9 +1,7 @@
 import os.path
 import math
-
 import numpy as np
 import numpy.linalg as npl
-
 from ..linalg.basic import coh
 
 
@@ -26,7 +24,10 @@ def opt_c(num_n, num_m, num_tries, num_samples, str_path):
 
         # search given dimensions and precision in the table
         arr_search = np.apply_along_axis(
-            np.all, 1, (mat_c_opt[:, 0:4] == [num_n, num_m, num_tries, num_samples]))
+            np.all,
+            1,
+            (mat_c_opt[:, 0:4] == [num_n, num_m, num_tries, num_samples])
+        )
 
         # if we found it, return it
         if np.any(arr_search):
@@ -104,7 +105,6 @@ def pack(
 
     arr_z = arr_c*(np.cos(arr_phi) + 1j*np.sin(arr_phi))
     arr_n = np.arange(num_n)
-    #mat_V = np.array(map(np.power(arr_z,c),np.arange(num_n)))
 
     mat_V = np.empty((num_n, num_m), dtype='complex128')
     for ii in range(0, num_n):

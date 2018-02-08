@@ -9,11 +9,9 @@ points on the sphere, thus they repell each other
 import math
 import time
 import os.path
-
 import numpy as np
 import numpy.random as npr
 import numpy.linalg as npl
-
 from .basic import *
 
 
