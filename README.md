@@ -9,7 +9,12 @@ Clone or download this repository and invoke
 python setup.py install
 ```
 
-with the necessary user priviledges.
+with the necessary user priviledges. Or run
+
+```bash
+pip install camiba
+```
+to get a fresh build from PyPi.
 
 ## Documentation
 

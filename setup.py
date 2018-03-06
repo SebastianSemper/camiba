@@ -36,13 +36,31 @@ setup(
     author='Sebastian Semper',
     author_email='sebastian.semper@tu-ilmenau.de',
     license='LGPL3',
-    install_requires=['sphinx', 'numpydoc'],
     description='Compressed Sensing Algorithms for Python',
     url='https://github.com/SebastianSemper/camiba',
     packages=['camiba'],
     cmdclass={'build_doc': BuildDoc},
-    # these are optional and override conf.py settings
     command_options={
         'build_doc': {
-        }}
+        }},
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: GNU General Public License (GPL)',
+        'Programming Language :: Python :: 3',
+    ],
+    project_urls={
+        'Documentation':
+            'https://sebastiansemper.github.io/camiba/',
+        'Funding':
+            'https://www.tu-ilmenau.de/it-ems/',
+        'Say Thanks!':
+            'https://www.tu-ilmenau.de/it-ems/',
+        'Source':
+            'https://github.com/sebastiansemper/camiba',
+        'Tracker':
+            'https://github.com/sebastiansemper/camiba/issues',
+    },
+    install_requires=['numpy', 'sphinx', 'scipy', 'numpydoc'],
+    python_requires='>=3',
 )
