@@ -27,6 +27,8 @@ div.bodywrapper {
 }
 
 div.body {
+    min-width: 0;
+    max-width: none;
     background-color: white;
     padding: 0 20px 30px 20px;
 }

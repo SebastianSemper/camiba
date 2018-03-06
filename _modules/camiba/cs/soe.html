@@ -4,28 +4,19 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>camiba.cs.soe &#8212; &#39;camiba&#39; 0.1.0 documentation</title>
     <link rel="stylesheet" href="../../../_static/traditional.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../../../',
-        VERSION:     '0.1.0',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    <script type="text/javascript" src="../../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -46,7 +37,21 @@
           <div class="body" role="main">
             
   <h1>Source code for camiba.cs.soe</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="c1"># This file is part of Camiba.</span>
+<span class="c1">#</span>
+<span class="c1"># Camiba is free software: you can redistribute it and/or modify</span>
+<span class="c1"># it under the terms of the GNU General Public License as published by</span>
+<span class="c1"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1"># (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1"># Camiba is distributed in the hope that it will be useful,</span>
+<span class="c1"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1"># GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1"># You should have received a copy of the GNU General Public License</span>
+<span class="c1"># along with Camiba. If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Here we implement a Class, which provides different methods for sparsity order</span>
 <span class="sd">estimation from compressed measurements.</span>
 
@@ -64,7 +69,7 @@
 
 <span class="kn">from</span> <span class="nn">..linalg.basic</span> <span class="k">import</span> <span class="n">proj_sphere</span>
 <span class="kn">from</span> <span class="nn">..linalg.basic</span> <span class="k">import</span> <span class="n">khatri_rao</span>
-<span class="kn">from</span> <span class="nn">..linalg.vand</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">..linalg</span> <span class="k">import</span> <span class="n">vand</span>
 <span class="kn">from</span> <span class="nn">..algs</span> <span class="k">import</span> <span class="n">omp</span>
 <span class="kn">from</span> <span class="nn">.scenario</span> <span class="k">import</span> <span class="n">Scenario</span>
 
@@ -80,8 +85,8 @@
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">num_n</span><span class="p">,</span>
             <span class="n">num_m</span><span class="p">,</span>
-            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
             <span class="n">mos_method</span><span class="o">=</span><span class="s1">&#39;eft&#39;</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
             <span class="n">algorithm</span><span class="o">=</span><span class="n">omp</span><span class="o">.</span><span class="n">recover</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
@@ -126,6 +131,8 @@
                 <span class="n">num_n</span>
             <span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_gamma</span>
 
+            <span class="n">matMeasurement</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">proj_sphere</span><span class="p">(</span><span class="n">matMeasurement</span><span class="p">)</span>
+
             <span class="c1"># set appropriate estimation function</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_est_lopes</span>
 
@@ -164,7 +171,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_num_err_prob</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;num_err_prob&#39;</span><span class="p">]</span>
 
             <span class="c1"># make scenario complex if we do overlap</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_do_complex</span> <span class="o">=</span> <span class="p">((</span><span class="n">num_p</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;do_complex&#39;</span><span class="p">]))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_do_complex</span> <span class="o">=</span> <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_p</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;do_complex&#39;</span><span class="p">]))</span>
 
             <span class="c1"># if we have no overlap, both matrices should be gaussian</span>
             <span class="c1"># if we have overlap one has to be vandermonde and the scenario</span>
@@ -190,7 +197,7 @@
 
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">mat_psi</span> <span class="o">=</span> <span class="n">vand</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span>
-                    <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">num_m</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_p</span><span class="p">)),</span>
+                    <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">num_m</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_p</span><span class="p">)),</span>
                     <span class="n">num_n</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_path</span> <span class="o">+</span> <span class="s2">&quot;vander_c&quot;</span>
                 <span class="p">)</span>
@@ -205,8 +212,8 @@
 
             <span class="c1"># measurement is the KRP of scaled KRP of vandermonde</span>
             <span class="c1"># where we only take the first num_m rows</span>
-            <span class="n">matMeasurement</span> <span class="o">=</span> <span class="n">general</span><span class="o">.</span><span class="n">proj_sphere</span><span class="p">(</span>
-                <span class="n">krp</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">mat_psi</span><span class="p">,</span> <span class="n">mat_phi</span><span class="p">)[:</span><span class="n">num_m</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">matMeasurement</span> <span class="o">=</span> <span class="n">proj_sphere</span><span class="p">(</span>
+                <span class="n">khatri_rao</span><span class="p">(</span><span class="n">mat_psi</span><span class="p">,</span> <span class="n">mat_phi</span><span class="p">)[:</span><span class="n">num_m</span><span class="p">,</span> <span class="p">:]</span>
             <span class="p">)</span>
 
             <span class="k">if</span> <span class="n">mos_method</span> <span class="o">==</span> <span class="s1">&#39;eft&#39;</span><span class="p">:</span>
@@ -215,17 +222,17 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_arr_r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eft_fetch_arr_r</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_num_q</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span>
-                    <span class="n">str_path</span><span class="o">+</span><span class="s2">&quot;eft_arr_r_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_path</span><span class="o">+</span><span class="s2">&quot;eft_arr_r_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
                 <span class="p">)</span>
 
                 <span class="c1"># fetch the thresholding coefficients</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_arr_eta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eft_fetch_arr_eta</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span>
-                    <span class="n">num_err_prob</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_num_err_prob</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_do_complex</span><span class="p">,</span>
-                    <span class="n">str_path</span> <span class="o">+</span> <span class="s2">&quot;eft_arr_eta_&quot;</span> <span class="o">+</span>
-                    <span class="nb">str</span><span class="p">(</span><span class="n">num_err_prob</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_path</span> <span class="o">+</span> <span class="s2">&quot;eft_arr_eta_&quot;</span> <span class="o">+</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_err_prob</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span>
                     <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_do_complex</span><span class="p">)</span> <span class="o">*</span> <span class="s2">&quot;c_&quot;</span> <span class="o">+</span>
                     <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
                 <span class="p">)</span> <span class="o">+</span> <span class="mf">0.4</span>
@@ -236,7 +243,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_num_err_prob</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_do_complex</span><span class="p">,</span>
-                    <span class="n">str_path</span> <span class="o">+</span> <span class="s2">&quot;eet_arr_eta_&quot;</span> <span class="o">+</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_path</span> <span class="o">+</span> <span class="s2">&quot;eet_arr_eta_&quot;</span> <span class="o">+</span>
                     <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_err_prob</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span>
                     <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_do_complex</span><span class="p">)</span> <span class="o">*</span> <span class="s2">&quot;c_&quot;</span> <span class="o">+</span>
                     <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
@@ -247,7 +254,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_num_err_prob</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_do_complex</span><span class="p">,</span>
-                    <span class="n">str_path</span> <span class="o">+</span> <span class="s2">&quot;new_arr_eta_&quot;</span> <span class="o">+</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_path</span> <span class="o">+</span> <span class="s2">&quot;new_arr_eta_&quot;</span> <span class="o">+</span>
                     <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_err_prob</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span>
                     <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_do_complex</span><span class="p">)</span> <span class="o">*</span> <span class="s2">&quot;c_&quot;</span> <span class="o">+</span>
                     <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
@@ -288,8 +295,8 @@
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">apply_along_axis</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_function</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">arr_b</span>
             <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_function</span><span class="p">(</span><span class="n">arr_b</span><span class="p">)</span></div>
+        <span class="k">else</span><span class="p">:</span></div>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate_function</span><span class="p">(</span><span class="n">arr_b</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_eft_fetch_arr_r</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_m</span><span class="p">,</span> <span class="n">num_n</span><span class="p">,</span> <span class="n">str_p</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Helper function to calculate r and store r helper array&quot;&quot;&quot;</span>
@@ -348,7 +355,7 @@
             <span class="k">if</span> <span class="n">doComplex</span><span class="p">:</span>
                 <span class="n">ten_trials</span> <span class="o">=</span> <span class="p">(</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">num_N</span><span class="p">,</span> <span class="n">num_M</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span> <span class="o">+</span>
                               <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">num_N</span><span class="p">,</span> <span class="n">num_M</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
-                              <span class="p">)</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+                              <span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">ten_trials</span> <span class="o">=</span> <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">num_N</span><span class="p">,</span> <span class="n">num_M</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
 
@@ -422,11 +429,11 @@
 
             <span class="c1"># adapt to complex case</span>
             <span class="k">if</span> <span class="n">doComplex</span><span class="p">:</span>
-                <span class="n">mat_trials</span> <span class="o">=</span> <span class="p">(</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span> <span class="o">+</span>
-                              <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
-                              <span class="p">)</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+                <span class="n">mat_trials</span> <span class="o">=</span> <span class="p">(</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span> <span class="o">+</span>
+                              <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
+                              <span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">mat_trials</span> <span class="o">=</span> <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
+                <span class="n">mat_trials</span> <span class="o">=</span> <span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">num_N</span><span class="p">,</span> <span class="n">num_M</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
 
             <span class="n">num_P</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">)</span>
 
@@ -436,6 +443,7 @@
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_p</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_trials</span><span class="p">):</span>
+
                     <span class="n">ten_trials</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">mat_trials</span><span class="p">[:,</span> <span class="n">ii</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -494,7 +502,7 @@
             <span class="k">if</span> <span class="n">doComplex</span><span class="p">:</span>
                 <span class="n">mat_trials</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span> <span class="o">+</span>
                                 <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
-                                <span class="p">)</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+                                <span class="p">)</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">mat_trials</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">npr</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_trials</span><span class="p">)</span>
 
@@ -604,12 +612,11 @@
 
         <span class="k">return</span> <span class="mi">1</span>
 
-
     <span class="k">def</span> <span class="nf">_nope_overlap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vec_b</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;	estimation routine that reshapes b without</span>
 <span class="sd">            reuing any elements.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">mat_B</span><span class="o">=</span><span class="n">vec_b</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
+        <span class="n">mat_B</span> <span class="o">=</span> <span class="n">vec_b</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_l</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">))</span>
 
         <span class="c1"># initiate the model order selection</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mos_method</span> <span class="o">==</span> <span class="s1">&#39;eft&#39;</span><span class="p">:</span>
@@ -618,7 +625,6 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_eet</span><span class="p">(</span><span class="n">mat_B</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mos_method</span> <span class="o">==</span> <span class="s1">&#39;new&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_new</span><span class="p">(</span><span class="n">mat_B</span><span class="p">)</span>
-
 
     <span class="k">def</span> <span class="nf">_true_overlap</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vec_b</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -626,8 +632,7 @@
 <span class="sd">            according to some overlap</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">mat_B</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_reshape_measurement</span><span class="p">(</span><span class="n">vec_b</span><span class="p">)</span>
-
+        <span class="n">mat_B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reshape_measurement</span><span class="p">(</span><span class="n">vec_b</span><span class="p">)</span>
         <span class="c1"># initiate the model order selection</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mos_method</span> <span class="o">==</span> <span class="s1">&#39;eft&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_eft</span><span class="p">(</span><span class="n">mat_B</span><span class="p">)</span>
@@ -635,7 +640,6 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_eet</span><span class="p">(</span><span class="n">mat_B</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mos_method</span> <span class="o">==</span> <span class="s1">&#39;new&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_do_new</span><span class="p">(</span><span class="n">mat_B</span><span class="p">)</span>
-
 
     <span class="k">def</span> <span class="nf">_largest_div</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -645,12 +649,11 @@
 <span class="sd">            Calculates the largest divisor of a natural number num_n</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">num_d</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">num_n</span><span class="p">))</span>
+        <span class="n">num_d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">num_n</span><span class="p">))</span>
         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">num_n</span> <span class="o">%</span> <span class="n">num_d</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">return</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">num_d</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_n</span><span class="o">/</span><span class="n">num_d</span><span class="p">))</span>
             <span class="n">num_d</span> <span class="o">-=</span> <span class="mi">1</span>
-
 
     <span class="k">def</span> <span class="nf">_find_block_length</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_m</span><span class="p">,</span> <span class="n">num_p</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -658,9 +661,9 @@
 <span class="sd">            for given dimensions and block advance</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">num_l_init</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="nb">float</span><span class="p">(</span><span class="n">num_m</span><span class="p">)</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">num_p</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="n">num_p</span><span class="o">+</span><span class="mf">1.0</span><span class="p">)))</span>
-        <span class="n">num_l1</span><span class="o">=</span><span class="n">num_l_init</span>
-        <span class="n">num_l2</span><span class="o">=</span><span class="n">num_l_init</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">num_l_init</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="nb">float</span><span class="p">(</span><span class="n">num_m</span><span class="p">)</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">num_p</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="n">num_p</span><span class="o">+</span><span class="mf">1.0</span><span class="p">)))</span>
+        <span class="n">num_l1</span> <span class="o">=</span> <span class="n">num_l_init</span>
+        <span class="n">num_l2</span> <span class="o">=</span> <span class="n">num_l_init</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">num_m</span> <span class="o">-</span> <span class="n">num_l1</span><span class="p">)</span> <span class="o">%</span> <span class="n">num_p</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_l1</span><span class="p">)</span>
@@ -671,49 +674,45 @@
             <span class="n">num_l1</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="n">num_l2</span> <span class="o">-=</span> <span class="mi">1</span>
 
-
     <span class="k">def</span> <span class="nf">_est_lopes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vec_b</span><span class="p">):</span>
-        <span class="n">numT1</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">vec_b</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_m1</span><span class="p">]))</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_gamma</span>
-        <span class="n">numT2</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">vec_b</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">num_m1</span><span class="p">:]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_gamma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">numT1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">vec_b</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_m1</span><span class="p">]))</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_gamma</span>
+        <span class="n">numT2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">vec_b</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">num_m1</span><span class="p">:]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_gamma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">numT1</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="n">numT2</span><span class="p">))</span>
 
-
     <span class="k">def</span> <span class="nf">_est_ravazzi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vec_b</span><span class="p">):</span>
-        <span class="n">num_s</span><span class="o">=</span><span class="mi">10</span>
-        <span class="n">num_k</span><span class="o">=</span><span class="mi">10</span>
-        <span class="n">arr_ka</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
-        <span class="n">arr_pi</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">,</span> <span class="n">num_s</span><span class="p">))</span>
-        <span class="n">arr_al</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
-        <span class="n">arr_be</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
-        <span class="n">arr_pe</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
+        <span class="n">num_s</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="n">num_k</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="n">arr_ka</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
+        <span class="n">arr_pi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_c</span><span class="p">,</span> <span class="n">num_s</span><span class="p">))</span>
+        <span class="n">arr_al</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
+        <span class="n">arr_be</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
+        <span class="n">arr_pe</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
 
-        <span class="n">arr_pi</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">0.5</span>
-        <span class="n">arr_al</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">500</span>
-        <span class="n">arr_pe</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mf">0.01</span>
-        <span class="n">arr_be</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">200</span>
+        <span class="n">arr_pi</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="n">arr_al</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
+        <span class="n">arr_pe</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.01</span>
+        <span class="n">arr_be</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
 
         <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_s</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
             <span class="c1"># E-step</span>
-            <span class="n">q1</span><span class="o">=</span><span class="p">(</span><span class="n">arr_pe</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">arr_al</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span>
-            <span class="n">q2</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">arr_pe</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">arr_be</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span>
-            <span class="n">e1</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span> <span class="n">vec_b</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">arr_al</span><span class="p">[</span><span class="n">ii</span><span class="p">]))</span>
-            <span class="n">e2</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span> <span class="n">vec_b</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">arr_be</span><span class="p">[</span><span class="n">ii</span><span class="p">]))</span>
-            <span class="n">arr_pi</span><span class="p">[:,</span> <span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="p">(</span><span class="n">q1</span> <span class="o">*</span> <span class="n">e1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">q1</span> <span class="o">*</span> <span class="n">e1</span> <span class="o">+</span> <span class="n">q2</span> <span class="o">*</span> <span class="n">e2</span><span class="p">)</span>
+            <span class="n">q1</span> <span class="o">=</span> <span class="p">(</span><span class="n">arr_pe</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">arr_al</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span>
+            <span class="n">q2</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">arr_pe</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">arr_be</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span>
+            <span class="n">e1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span> <span class="n">vec_b</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">arr_al</span><span class="p">[</span><span class="n">ii</span><span class="p">]))</span>
+            <span class="n">e2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span> <span class="n">vec_b</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">arr_be</span><span class="p">[</span><span class="n">ii</span><span class="p">]))</span>
+            <span class="n">arr_pi</span><span class="p">[:,</span> <span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">q1</span> <span class="o">*</span> <span class="n">e1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">q1</span> <span class="o">*</span> <span class="n">e1</span> <span class="o">+</span> <span class="n">q2</span> <span class="o">*</span> <span class="n">e2</span><span class="p">)</span>
 
             <span class="c1"># M-Step</span>
-            <span class="n">sum1</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">arr_pi</span><span class="p">[:,</span> <span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
-            <span class="n">sum2</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">arr_pi</span><span class="p">[:,</span> <span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
-            <span class="n">arr_pe</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">sum1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span>
-            <span class="n">arr_ka</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">arr_pe</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> \
+            <span class="n">sum1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">arr_pi</span><span class="p">[:,</span> <span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">sum2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">arr_pi</span><span class="p">[:,</span> <span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">arr_pe</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">sum1</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span>
+            <span class="n">arr_ka</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">arr_pe</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> \
                 <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_gamma</span><span class="p">)</span>
 
-            <span class="n">arr_al</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">arr_pi</span><span class="p">[:,</span> <span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">vec_b</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">sum1</span>
-            <span class="n">arr_be</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">arr_pi</span><span class="p">[:,</span> <span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">vec_b</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">sum2</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">arr_ka</span><span class="p">[</span><span class="n">ii</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">arr_al</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="n">arr_pi</span><span class="p">[:,</span> <span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">vec_b</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">sum1</span>
+            <span class="n">arr_be</span><span class="p">[</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inner</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">arr_pi</span><span class="p">[:,</span> <span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">vec_b</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">sum2</span>
 
         <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">arr_ka</span><span class="p">[</span><span class="n">num_s</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
-
 
 <div class="viewcode-block" id="Soe.phase_trans_est"><a class="viewcode-back" href="../../../cs.html#camiba.cs.Soe.phase_trans_est">[docs]</a>    <span class="k">def</span> <span class="nf">phase_trans_est</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                         <span class="n">num_s</span><span class="p">,</span>
@@ -761,7 +760,7 @@
 <span class="sd">        ndarray</span>
 <span class="sd">            the compressed measurement</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">dct_res</span><span class="o">=</span><span class="p">{}</span>
+        <span class="n">dct_res</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="n">dct_fun_compare</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">dct_res</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">ii</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span>
                 <span class="nb">len</span><span class="p">(</span><span class="n">arr_snr</span><span class="p">),</span>			<span class="c1"># for each snr level</span>
@@ -772,22 +771,22 @@
             <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_trials</span><span class="p">):</span>
 
                 <span class="c1"># generate ground truth and noisy measurement</span>
-                <span class="n">arrX</span><span class="o">=</span><span class="n">fun_x</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
-                <span class="n">arrB</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">arrX</span><span class="p">)</span> <span class="o">+</span> <span class="n">fun_noise</span><span class="p">(</span><span class="n">snr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
+                <span class="n">arrX</span> <span class="o">=</span> <span class="n">fun_x</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
+                <span class="n">arrB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">arrX</span><span class="p">)</span> <span class="o">+</span> <span class="n">fun_noise</span><span class="p">(</span><span class="n">snr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_c</span><span class="p">)</span>
 
                 <span class="c1"># estimate the sparsity order</span>
-                <span class="n">num_s_est</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">arrB</span><span class="p">)</span>
-
+                <span class="n">num_s_est</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">arrB</span><span class="p">)</span>
+                
                 <span class="k">for</span> <span class="n">kk</span> <span class="ow">in</span> <span class="n">dct_res</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="n">key</span><span class="o">=</span><span class="n">kk</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                    <span class="n">dct_res</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">ii</span><span class="p">,</span> <span class="n">jj</span><span class="p">]</span><span class="o">=</span><span class="n">dct_fun_compare</span><span class="p">[</span><span class="n">key</span><span class="p">](</span>
+                    <span class="n">key</span> <span class="o">=</span> <span class="n">kk</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">dct_res</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">ii</span><span class="p">,</span> <span class="n">jj</span><span class="p">]</span> <span class="o">=</span> <span class="n">dct_fun_compare</span><span class="p">[</span><span class="n">key</span><span class="p">](</span>
                         <span class="n">arrX</span><span class="p">,</span> <span class="n">num_s_est</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="n">dct_res</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">key</span><span class="o">=</span><span class="n">ii</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">dct_res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dct_res</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">dct_res</span></div>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">ii</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">dct_res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dct_res</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</div>
+        <span class="k">return</span> <span class="n">dct_res</span>
 
 
 <div class="viewcode-block" id="Soe.phase_trans_est_rec"><a class="viewcode-back" href="../../../cs.html#camiba.cs.Soe.phase_trans_est_rec">[docs]</a>    <span class="k">def</span> <span class="nf">phase_trans_est_rec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
@@ -841,7 +840,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># dictionary with results</span>
-        <span class="n">dct_res</span><span class="o">=</span><span class="p">{}</span>
+        <span class="n">dct_res</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="c1"># initialize with keys from compare function</span>
         <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="n">dct_fun_compare</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -850,36 +849,39 @@
                 <span class="n">num_trials</span>				<span class="c1"># for each trial</span>
             <span class="p">))})</span>
 
-        <span class="c1"># g through SNR and trials</span>
+        <span class="c1"># go through SNR and trials</span>
         <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">snr</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arr_snr</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_trials</span><span class="p">):</span>
 
                 <span class="c1"># generate ground truth and noisy measurement</span>
-                <span class="n">arrX</span><span class="o">=</span><span class="n">fun_x</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
-                <span class="n">arrB</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">arrX</span><span class="p">)</span> <span class="o">+</span> <span class="n">fun_noise</span><span class="p">(</span><span class="n">snr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_k</span><span class="p">)</span>
+                <span class="n">arrX</span> <span class="o">=</span> <span class="n">fun_x</span><span class="p">(</span><span class="n">num_s</span><span class="p">)</span>
+                <span class="n">arrB</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">arrX</span><span class="p">)</span> <span class="o">+</span> <span class="n">fun_noise</span><span class="p">(</span><span class="n">snr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_num_c</span><span class="p">)</span>
 
                 <span class="c1"># estimate the sparsity order</span>
-                <span class="n">num_s_est</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">arrB</span><span class="p">)</span>
+                <span class="n">num_s_est</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">arrB</span><span class="p">)</span>
 
                 <span class="c1"># add the estimated order to the params of the recovery</span>
                 <span class="c1"># TODO: update it if already present</span>
                 <span class="n">args</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;num_steps&#39;</span><span class="p">:</span> <span class="n">num_s_est</span><span class="p">})</span>
 
-                <span class="c1"># do recovery with estimated sparsity</span>
-                <span class="n">arr_x_est</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">recover</span><span class="p">(</span><span class="n">arrB</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">num_s_est</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c1"># do recovery with estimated sparsity</span>
+                    <span class="n">arr_x_est</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">recover</span><span class="p">(</span><span class="n">arrB</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">arr_x_est</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_num_m</span><span class="p">)</span>
 
                 <span class="c1"># write all the results into the appropriate place</span>
                 <span class="k">for</span> <span class="n">kk</span> <span class="ow">in</span> <span class="n">dct_res</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                    <span class="n">key</span><span class="o">=</span><span class="n">kk</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                    <span class="n">dct_res</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">ii</span><span class="p">,</span> <span class="n">jj</span><span class="p">]</span><span class="o">=</span><span class="n">dct_fun_compare</span><span class="p">[</span><span class="n">key</span><span class="p">](</span>
+                    <span class="n">key</span> <span class="o">=</span> <span class="n">kk</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">dct_res</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">ii</span><span class="p">,</span> <span class="n">jj</span><span class="p">]</span> <span class="o">=</span> <span class="n">dct_fun_compare</span><span class="p">[</span><span class="n">key</span><span class="p">](</span>
                         <span class="n">arrX</span><span class="p">,</span> <span class="n">arr_x_est</span><span class="p">)</span>
 
         <span class="c1"># calculate</span>
         <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="n">dct_res</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">key</span><span class="o">=</span><span class="n">ii</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">dct_res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dct_res</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">dct_res</span></div></div>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">ii</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">dct_res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dct_res</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</div></div>
+        <span class="k">return</span> <span class="n">dct_res</span>
 </pre></div>
 
           </div>
@@ -889,12 +891,14 @@
         <div class="sphinxsidebarwrapper">
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="../../../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -916,7 +920,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Sebastian Semper.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
     </div>
   </body>
 </html>
