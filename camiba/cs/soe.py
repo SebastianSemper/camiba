@@ -16,7 +16,7 @@ import os
 
 from ..linalg.basic import proj_sphere
 from ..linalg.basic import khatri_rao
-from ..linalg.vand import *
+from ..linalg import vand
 from ..algs import omp
 from .scenario import Scenario
 
@@ -32,8 +32,8 @@ class Soe(Scenario):
             self,
             num_n,
             num_m,
-            *args,
             mos_method='eft',
+            *args,
             algorithm=omp.recover,
             **kwargs
     ):
@@ -78,6 +78,8 @@ class Soe(Scenario):
                 num_n
             ) * self._num_gamma
 
+            matMeasurement[:] = proj_sphere(matMeasurement)
+
             # set appropriate estimation function
             self._estimate_function = self._est_lopes
 
@@ -116,7 +118,7 @@ class Soe(Scenario):
             self._num_err_prob = kwargs['num_err_prob']
 
             # make scenario complex if we do overlap
-            self._do_complex = ((num_p != 0) or (kwargs['do_complex']))
+            self._do_complex = ((self._num_p != 0) or (kwargs['do_complex']))
 
             # if we have no overlap, both matrices should be gaussian
             # if we have overlap one has to be vandermonde and the scenario
@@ -142,7 +144,7 @@ class Soe(Scenario):
 
             else:
                 mat_psi = vand.draw(
-                    int(math.ceil(float(num_m)/self._num_p)),
+                    int(np.ceil(float(num_m)/self._num_p)),
                     num_n,
                     self._buffer_path + "vander_c"
                 )
@@ -157,8 +159,8 @@ class Soe(Scenario):
 
             # measurement is the KRP of scaled KRP of vandermonde
             # where we only take the first num_m rows
-            matMeasurement = general.proj_sphere(
-                krp.prod(mat_psi, mat_phi)[:num_m, :]
+            matMeasurement = proj_sphere(
+                khatri_rao(mat_psi, mat_phi)[:num_m, :]
             )
 
             if mos_method == 'eft':
@@ -167,17 +169,17 @@ class Soe(Scenario):
                 self._arr_r = self._eft_fetch_arr_r(
                     self._num_q,
                     self._num_l,
-                    str_path+"eft_arr_r_"+str(self._num_l)+"_"+str(self._num_k)
+                    self._buffer_path+"eft_arr_r_"+str(self._num_l)+"_"+str(self._num_k)
                 )
 
                 # fetch the thresholding coefficients
                 self._arr_eta = self._eft_fetch_arr_eta(
                     self._num_l,
                     self._num_k,
-                    num_err_prob,
+                    self._num_err_prob,
                     self._do_complex,
-                    str_path + "eft_arr_eta_" +
-                    str(num_err_prob) + "_" +
+                    self._buffer_path + "eft_arr_eta_" +
+                    str(self._num_err_prob) + "_" +
                     int(self._do_complex) * "c_" +
                     str(self._num_l) + "_" + str(self._num_k)
                 ) + 0.4
@@ -188,7 +190,7 @@ class Soe(Scenario):
                     self._num_k,
                     self._num_err_prob,
                     self._do_complex,
-                    str_path + "eet_arr_eta_" +
+                    self._buffer_path + "eet_arr_eta_" +
                     str(self._num_err_prob) + "_" +
                     int(self._do_complex) * "c_" +
                     str(self._num_l) + "_" + str(self._num_k)
@@ -199,7 +201,7 @@ class Soe(Scenario):
                     self._num_k,
                     self._num_err_prob,
                     self._do_complex,
-                    str_path + "new_arr_eta_" +
+                    self._buffer_path + "new_arr_eta_" +
                     str(self._num_err_prob) + "_" +
                     int(self._do_complex) * "c_" +
                     str(self._num_l) + "_" + str(self._num_k)
@@ -300,7 +302,7 @@ class Soe(Scenario):
             if doComplex:
                 ten_trials = (npr.randn(num_N, num_M, num_trials) +
                               1j*npr.randn(num_N, num_M, num_trials)
-                              )/math.sqrt(2.0)
+                              )/np.sqrt(2.0)
             else:
                 ten_trials = npr.randn(num_N, num_M, num_trials)
 
@@ -374,11 +376,11 @@ class Soe(Scenario):
 
             # adapt to complex case
             if doComplex:
-                mat_trials = (npr.randn(self._num_k, num_trials) +
-                              1j*npr.randn(self._num_k, num_trials)
-                              )/math.sqrt(2.0)
+                mat_trials = (npr.randn(self._num_l * self._num_k, num_trials) +
+                              1j*npr.randn(self._num_l * self._num_k, num_trials)
+                              )/np.sqrt(2.0)
             else:
-                mat_trials = npr.randn(self._num_k, num_trials)
+                mat_trials = npr.randn(num_N, num_M, num_trials)
 
             num_P = min(self._num_k, self._num_l)
 
@@ -388,6 +390,7 @@ class Soe(Scenario):
 
             if self._num_p == 0:
                 for ii in range(num_trials):
+
                     ten_trials[:, :, ii] = mat_trials[:, ii].reshape(
                         self._num_l, self._num_k)
             else:
@@ -446,7 +449,7 @@ class Soe(Scenario):
             if doComplex:
                 mat_trials = 2*(npr.randn(self._num_k, num_trials) +
                                 1j*npr.randn(self._num_k, num_trials)
-                                )/math.sqrt(2.0)
+                                )/np.sqrt(2.0)
             else:
                 mat_trials = 2*npr.randn(self._num_k, num_trials)
 
@@ -556,12 +559,11 @@ class Soe(Scenario):
 
         return 1
 
-
     def _nope_overlap(self, vec_b):
         """	estimation routine that reshapes b without
             reuing any elements.
         """
-        mat_B=vec_b.reshape(self._num_l, self._num_k)
+        mat_B = vec_b.reshape((self._num_l, self._num_k))
 
         # initiate the model order selection
         if self._mos_method == 'eft':
@@ -570,7 +572,6 @@ class Soe(Scenario):
             return self._do_eet(mat_B)
         elif self._mos_method == 'new':
             return self._do_new(mat_B)
-
 
     def _true_overlap(self, vec_b):
         """
@@ -578,8 +579,7 @@ class Soe(Scenario):
             according to some overlap
         """
 
-        mat_B=self._reshape_measurement(vec_b)
-
+        mat_B = self._reshape_measurement(vec_b)
         # initiate the model order selection
         if self._mos_method == 'eft':
             return self._do_eft(mat_B)
@@ -587,7 +587,6 @@ class Soe(Scenario):
             return self._do_eet(mat_B)
         elif self._mos_method == 'new':
             return self._do_new(mat_B)
-
 
     def _largest_div(
         self,
@@ -597,12 +596,11 @@ class Soe(Scenario):
             Calculates the largest divisor of a natural number num_n
         """
 
-        num_d=math.ceil(math.sqrt(num_n))
+        num_d = np.ceil(np.sqrt(num_n))
         while True:
             if num_n % num_d == 0:
                 return (int(num_d), int(num_n/num_d))
             num_d -= 1
-
 
     def _find_block_length(self, num_m, num_p):
         """
@@ -610,9 +608,9 @@ class Soe(Scenario):
             for given dimensions and block advance
         """
 
-        num_l_init=int(math.ceil((float(num_m) + float(num_p))/(num_p+1.0)))
-        num_l1=num_l_init
-        num_l2=num_l_init - 1
+        num_l_init = int(np.ceil((float(num_m) + float(num_p))/(num_p+1.0)))
+        num_l1 = num_l_init
+        num_l2 = num_l_init - 1
         while True:
             if (num_m - num_l1) % num_p == 0:
                 return int(num_l1)
@@ -623,49 +621,45 @@ class Soe(Scenario):
             num_l1 += 1
             num_l2 -= 1
 
-
     def _est_lopes(self, vec_b):
-        numT1=np.median(np.abs(vec_b[: self.num_m1])) / self._num_gamma
-        numT2=np.mean(vec_b[self.num_m1:] ** 2) / (self._num_gamma ** 2)
+        numT1 = np.median(np.abs(vec_b[: self.num_m1])) / self._num_gamma
+        numT2 = np.mean(vec_b[self.num_m1:] ** 2) / (self._num_gamma ** 2)
 
         return int(np.round(numT1 ** 2 / numT2))
 
-
     def _est_ravazzi(self, vec_b):
-        num_s=10
-        num_k=10
-        arr_ka=np.zeros(num_s)
-        arr_pi=np.zeros((self._num_k, num_s))
-        arr_al=np.zeros(num_s)
-        arr_be=np.zeros(num_s)
-        arr_pe=np.zeros(num_s)
+        num_s = 10
+        num_k = 10
+        arr_ka = np.zeros(num_s)
+        arr_pi = np.zeros((self._num_c, num_s))
+        arr_al = np.zeros(num_s)
+        arr_be = np.zeros(num_s)
+        arr_pe = np.zeros(num_s)
 
-        arr_pi[:, 0]=0.5
-        arr_al[0]=500
-        arr_pe[0]=0.01
-        arr_be[0]=200
+        arr_pi[:, 0] = 0.5
+        arr_al[0] = 5
+        arr_pe[0] = 0.01
+        arr_be[0] = 2
 
         for ii in range(num_s - 1):
             # E-step
-            q1=(arr_pe[ii])/np.sqrt(arr_al[ii])
-            q2=(1 - arr_pe[ii])/np.sqrt(arr_be[ii])
-            e1=np.exp(- vec_b ** 2 / (2 * arr_al[ii]))
-            e2=np.exp(- vec_b ** 2 / (2 * arr_be[ii]))
-            arr_pi[:, ii + 1]=(q1 * e1)/(q1 * e1 + q2 * e2)
+            q1 = (arr_pe[ii]) / np.sqrt(arr_al[ii])
+            q2 = (1 - arr_pe[ii]) / np.sqrt(arr_be[ii])
+            e1 = np.exp(- vec_b ** 2 / (2 * arr_al[ii]))
+            e2 = np.exp(- vec_b ** 2 / (2 * arr_be[ii]))
+            arr_pi[:, ii + 1] = (q1 * e1)/(q1 * e1 + q2 * e2)
 
             # M-Step
-            sum1=np.sum(arr_pi[:, ii + 1])
-            sum2=np.sum(1 - arr_pi[:, ii + 1])
-            arr_pe[ii + 1]=sum1 / self._num_k
-            arr_ka[ii + 1]=np.log(arr_pe[ii + 1]) \
+            sum1 = np.sum(arr_pi[:, ii + 1])
+            sum2 = np.sum(1 - arr_pi[:, ii + 1])
+            arr_pe[ii + 1] = sum1 / self._num_k
+            arr_ka[ii + 1] = np.log(arr_pe[ii + 1]) \
                 / np.log(1 - self._num_gamma)
 
-            arr_al[ii + 1]=np.inner(arr_pi[:, ii + 1], vec_b ** 2) / sum1
-            arr_be[ii + 1]=np.inner(1 - arr_pi[:, ii + 1], vec_b ** 2) / sum2
-            print(arr_ka[ii+1])
+            arr_al[ii + 1] = np.inner(arr_pi[:, ii + 1], vec_b ** 2) / sum1
+            arr_be[ii + 1] = np.inner(1 - arr_pi[:, ii + 1], vec_b ** 2) / sum2
 
         return int(arr_ka[num_s - 1])
-
 
     def phase_trans_est(self,
                         num_s,
@@ -713,7 +707,7 @@ class Soe(Scenario):
         ndarray
             the compressed measurement
         """
-        dct_res={}
+        dct_res = {}
         for ii in dct_fun_compare.items():
             dct_res.update({ii[0]: np.zeros((
                 len(arr_snr),			# for each snr level
@@ -724,20 +718,20 @@ class Soe(Scenario):
             for jj in range(num_trials):
 
                 # generate ground truth and noisy measurement
-                arrX=fun_x(num_s)
-                arrB=self.compress(arrX) + fun_noise(snr, self._num_k)
+                arrX = fun_x(num_s)
+                arrB = self.compress(arrX) + fun_noise(snr, self._num_c)
 
                 # estimate the sparsity order
-                num_s_est=self.estimate(arrB)
-
+                num_s_est = self.estimate(arrB)
+                
                 for kk in dct_res.items():
-                    key=kk[0]
-                    dct_res[key][ii, jj]=dct_fun_compare[key](
+                    key = kk[0]
+                    dct_res[key][ii, jj] = dct_fun_compare[key](
                         arrX, num_s_est)
 
         for ii in dct_res.items():
-            key=ii[0]
-            dct_res[key]=np.mean(dct_res[key], axis=1)
+            key = ii[0]
+            dct_res[key] = np.mean(dct_res[key], axis=1)
 
         return dct_res
 
@@ -793,7 +787,7 @@ class Soe(Scenario):
         """
 
         # dictionary with results
-        dct_res={}
+        dct_res = {}
 
         # initialize with keys from compare function
         for ii in dct_fun_compare.items():
@@ -802,33 +796,36 @@ class Soe(Scenario):
                 num_trials				# for each trial
             ))})
 
-        # g through SNR and trials
+        # go through SNR and trials
         for ii, snr in enumerate(arr_snr):
             for jj in range(num_trials):
 
                 # generate ground truth and noisy measurement
-                arrX=fun_x(num_s)
-                arrB=self.compress(arrX) + fun_noise(snr, self._num_k)
+                arrX = fun_x(num_s)
+                arrB = self.compress(arrX) + fun_noise(snr, self._num_c)
 
                 # estimate the sparsity order
-                num_s_est=self.estimate(arrB)
+                num_s_est = self.estimate(arrB)
 
                 # add the estimated order to the params of the recovery
                 # TODO: update it if already present
                 args.update({'num_steps': num_s_est})
 
-                # do recovery with estimated sparsity
-                arr_x_est=self.recover(arrB, args)
+                if num_s_est > 0:
+                    # do recovery with estimated sparsity
+                    arr_x_est = self.recover(arrB, args)
+                else:
+                    arr_x_est = np.zeros(self._num_m)
 
                 # write all the results into the appropriate place
                 for kk in dct_res.items():
-                    key=kk[0]
-                    dct_res[key][ii, jj]=dct_fun_compare[key](
+                    key = kk[0]
+                    dct_res[key][ii, jj] = dct_fun_compare[key](
                         arrX, arr_x_est)
 
         # calculate
         for ii in dct_res.items():
-            key=ii[0]
-            dct_res[key]=np.mean(dct_res[key], axis=1)
+            key = ii[0]
+            dct_res[key] = np.mean(dct_res[key], axis=1)
 
         return dct_res

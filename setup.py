@@ -11,6 +11,7 @@ setup(
     install_requires=['sphinx', 'numpydoc'],
     description='Compressed Sensing Algorithms for Python',
     url='https://github.com/SebastianSemper/camiba',
+    packages=['camiba'],
     cmdclass={'build_doc': BuildDoc},
     # these are optional and override conf.py settings
     command_options={

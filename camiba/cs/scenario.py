@@ -30,7 +30,7 @@ class Scenario:
             reconstruction algorithm
         """
         self._num_n, self._num_m = mat_D.shape
-        self._num_k = mat_C.shape[0]
+        self._num_c = mat_C.shape[0]
 
         self._mat_D = mat_D
         self._mat_C = mat_C
@@ -271,7 +271,7 @@ class Scenario:
 
                 # generate ground truth and noisy measurement
                 arrX = fun_x(num_s)
-                arrB = self.compress(arrX) + fun_noise(snr, self._num_k)
+                arrB = self.compress(arrX) + fun_noise(snr, self._num_c)
 
                 # do reconstruction
                 arrXEst = self.recover(arrB, args)

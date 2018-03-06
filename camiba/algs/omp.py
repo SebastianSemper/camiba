@@ -8,6 +8,7 @@ min ||x||_0 s.t. Ax = b
 for given matrix A and vector b and it is described and analyzed in [OMP]_.
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
 import numpy.linalg as npl
 from ..linalg.basic import aB
@@ -63,10 +64,11 @@ def recover(
 
         # solve approximation problem with
         # pseudo-inverse on current support
-        x_S = npl.solve(mat_B_S.dot(mat_A_S), mat_B_S.dot(arr_b))
+        try:
+            x_S = npl.solve(mat_B_S.dot(mat_A_S), mat_B_S.dot(arr_b))
+        except npl.linalg.LinAlgError:
+            return x
 
-        x.fill(0)
         x[aB(S)] = x_S
 
-    # renormalize x before returning
     return x

@@ -109,7 +109,7 @@ def khatri_rao(X, Y):
     # infer data-type form the factors
     Z = np.zeros(
         (N, X.shape[1]),
-        dtype=np.promote_types(X.dtype, y.dtype)
+        dtype=np.promote_types(X.dtype, Y.dtype)
     )
 
     # now push the reshaped outer products into the columns of the result
