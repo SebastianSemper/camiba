@@ -20,6 +20,7 @@ PGFplots and TikZ.
 
 import numpy as np
 import math
+import json
 
 
 def mat_to_heat(d, x, y, p):
@@ -140,6 +141,97 @@ def csv_to_dict(p):
         dct_res.update({kk: arr_vals[:, ii]})
 
     return dct_res
+
+
+def json_to_tex(in_path, out_path, verbose=False):
+    """
+        Save Dictionary to TeX Makros
+
+    This function takes a path to a JSON file and outputs a file of TeX
+    makros to make the values in the JSON file available to TeX. It may
+    be very useful if one would like to run simulations parametrized by an
+    external file and automatically include the used values in tex.
+
+    If one had a file config.json looking like:
+
+    >>> {
+    >>>     "measurementDataPath": "museData.mat",
+    >>>     "measurementDataName": "data",
+    >>>     "dictionaryDataPath": "dictData%(d).mat",
+    >>>     "dictionaryDataName": "data",
+    >>>     "dataShift": [0,0,0],
+    >>>     "dataStride": [1,1,1],
+    >>>     "recoParams": {
+    >>>         "numK": 50
+    >>>     },
+    >>>     "outputPath": "../data/",
+    >>>     "logPath": "reconstruct.log"
+    >>> }
+
+    then issuing
+
+    >>> json_to_tex(config.json, config.tex)
+
+    would result in the file config.tex looking like:
+
+    .. code-block:: none
+
+      \\newcommand{\\measurementDataPath}{museData.mat}
+      \\newcommand{\\measurementDataName}{data}
+      \\newcommand{\\dictionaryDataName}{data}
+      \\newcommand{\\dataShift1}{0}
+      \\newcommand{\\dataShift2}{0}
+      \\newcommand{\\dataShift3}{0}
+      \\newcommand{\\dataStride1}{1}
+      \\newcommand{\\dataStride2}{1}
+      \\newcommand{\\dataStride3}{1}
+      \\newcommand{\\recoParamsnumK}{50}
+      \\newcommand{\\outputPath}{../data/}
+      \\newcommand{\\logPath}{reconstruct.log}
+
+    Parameters
+    ----------
+    in_path : str
+        path to the json file
+    out_path : str
+        path to the tex file that will be created
+    """
+    json_file = open(in_path)
+    json_dct = json.load(json_file)
+    json_file.close()
+
+    lstMakros = _dict_to_tex(json_dct, "")
+
+    out_file = open(out_path, 'w')
+    for mm in lstMakros:
+        if verbose:
+            print(mm)
+        out_file.write(mm)
+    out_file.close()
+
+
+def _dict_to_tex(dct, in_string):
+    res = []
+    if in_string == "":
+        in_string = '\\newcommand{\\'
+
+    for kk in dct.keys():
+        # if we encounter a dictionary, we simply extend the definition of
+        # then corresponding makro
+        if type(dct[kk]) == dict:
+            res.append(*_dict_to_tex(dct[kk], in_string + kk))
+        elif type(dct[kk]) == list:
+            for ii, ll in enumerate(dct[kk]):
+                res.append(
+                    in_string + kk + str(ii + 1) + '}{' + str(ll)+'}'
+                )
+        else:
+            # leave out anything that contains a %, since we get all sorts
+            # of problems in tex, there
+            if (str(dct[kk])+kk).find("%") == -1:
+                res.append(in_string + kk + '}{' + str(dct[kk])+'}')
+
+    return res
 
 
 def save_params(dct_vars, str_p):

@@ -31,14 +31,19 @@ from sphinx.setup_command import BuildDoc
 
 setup(
     name='camiba',
-    version='0.1',
-    release='0.1.0',
+    version='0.1.1',
+    release='0.1.1',
     author='Sebastian Semper',
     author_email='sebastian.semper@tu-ilmenau.de',
     license='LGPL3',
     description='Compressed Sensing Algorithms for Python',
     url='https://github.com/SebastianSemper/camiba',
-    packages=['camiba'],
+    packages=[
+        'camiba',
+        'camiba.algs',
+        'camiba.cs',
+        'camiba.linalg'
+    ],
     cmdclass={'build_doc': BuildDoc},
     command_options={
         'build_doc': {
