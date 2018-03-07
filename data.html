@@ -97,6 +97,60 @@ the values are numpy arrays of the same length</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="camiba.data.json_to_tex">
+<code class="descclassname">camiba.data.</code><code class="descname">json_to_tex</code><span class="sig-paren">(</span><em>in_path</em>, <em>out_path</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/data.html#json_to_tex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.data.json_to_tex" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Save Dictionary to TeX Makros</div></blockquote>
+<p>This function takes a path to a JSON file and outputs a file of TeX
+makros to make the values in the JSON file available to TeX. It may
+be very useful if would one like to run simulations parametrized by an
+external file and automatically include the used values in tex.</p>
+<p>If one had a file config.json looking like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;measurementDataPath&quot;</span><span class="p">:</span> <span class="s2">&quot;museData.mat&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;measurementDataName&quot;</span><span class="p">:</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;dictionaryDataPath&quot;</span><span class="p">:</span> <span class="s2">&quot;dictData%(d).mat&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;dictionaryDataName&quot;</span><span class="p">:</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;dataShift&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;dataStride&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;recoParams&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;numK&quot;</span><span class="p">:</span> <span class="mi">50</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">},</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;outputPath&quot;</span><span class="p">:</span> <span class="s2">&quot;../data/&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;logPath&quot;</span><span class="p">:</span> <span class="s2">&quot;reconstruct.log&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">}</span>
+</pre></div>
+</div>
+<p>then issuing</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">json_to_tex</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">json</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">tex</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>would result in the file config.tex looking like:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>\newcommand{\measurementDataPath}{museData.mat}
+\newcommand{\measurementDataName}{data}
+\newcommand{\dictionaryDataName}{data}
+\newcommand{\dataShift1}{0}
+\newcommand{\dataShift2}{0}
+\newcommand{\dataShift3}{0}
+\newcommand{\dataStride1}{1}
+\newcommand{\dataStride2}{1}
+\newcommand{\dataStride3}{1}
+\newcommand{\recoParamsnumK}{50}
+\newcommand{\outputPath}{../data/}
+\newcommand{\logPath}{reconstruct.log}
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
 <dt id="camiba.data.mat_to_heat">
 <code class="descclassname">camiba.data.</code><code class="descname">mat_to_heat</code><span class="sig-paren">(</span><em>d</em>, <em>x</em>, <em>y</em>, <em>p</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/data.html#mat_to_heat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.data.mat_to_heat" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>

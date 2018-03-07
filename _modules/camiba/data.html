@@ -59,6 +59,7 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">json</span>
 
 
 <div class="viewcode-block" id="mat_to_heat"><a class="viewcode-back" href="../../data.html#camiba.data.mat_to_heat">[docs]</a><span class="k">def</span> <span class="nf">mat_to_heat</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
@@ -180,6 +181,95 @@
 </div>
     <span class="k">return</span> <span class="n">dct_res</span>
 
+
+<div class="viewcode-block" id="json_to_tex"><a class="viewcode-back" href="../../data.html#camiba.data.json_to_tex">[docs]</a><span class="k">def</span> <span class="nf">json_to_tex</span><span class="p">(</span><span class="n">in_path</span><span class="p">,</span> <span class="n">out_path</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save Dictionary to TeX Makros</span>
+
+<span class="sd">    This function takes a path to a JSON file and outputs a file of TeX</span>
+<span class="sd">    makros to make the values in the JSON file available to TeX. It may</span>
+<span class="sd">    be very useful if would one like to run simulations parametrized by an</span>
+<span class="sd">    external file and automatically include the used values in tex.</span>
+
+<span class="sd">    If one had a file config.json looking like:</span>
+
+<span class="sd">    &gt;&gt;&gt; {</span>
+<span class="sd">    &gt;&gt;&gt;     &quot;measurementDataPath&quot;: &quot;museData.mat&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;     &quot;measurementDataName&quot;: &quot;data&quot;,</span>
+
+<span class="sd">    &gt;&gt;&gt;     &quot;dictionaryDataPath&quot;: &quot;dictData%(d).mat&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;     &quot;dictionaryDataName&quot;: &quot;data&quot;,</span>
+
+<span class="sd">    &gt;&gt;&gt;     &quot;dataShift&quot;: [0,0,0],</span>
+<span class="sd">    &gt;&gt;&gt;     &quot;dataStride&quot;: [1,1,1],</span>
+
+<span class="sd">    &gt;&gt;&gt;     &quot;recoParams&quot;: {</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;numK&quot;: 50</span>
+<span class="sd">    &gt;&gt;&gt;     },</span>
+
+<span class="sd">    &gt;&gt;&gt;     &quot;outputPath&quot;: &quot;../data/&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;     &quot;logPath&quot;: &quot;reconstruct.log&quot;</span>
+<span class="sd">    &gt;&gt;&gt; }</span>
+
+<span class="sd">    then issuing</span>
+
+<span class="sd">    &gt;&gt;&gt; json_to_tex(config.json, config.tex)</span>
+
+<span class="sd">    would result in the file config.tex looking like:</span>
+
+<span class="sd">    .. code-block:: none</span>
+<span class="sd">    </span>
+<span class="sd">      \\newcommand{\\measurementDataPath}{museData.mat}</span>
+<span class="sd">      \\newcommand{\\measurementDataName}{data}</span>
+<span class="sd">      \\newcommand{\\dictionaryDataName}{data}</span>
+<span class="sd">      \\newcommand{\\dataShift1}{0}</span>
+<span class="sd">      \\newcommand{\\dataShift2}{0}</span>
+<span class="sd">      \\newcommand{\\dataShift3}{0}</span>
+<span class="sd">      \\newcommand{\\dataStride1}{1}</span>
+<span class="sd">      \\newcommand{\\dataStride2}{1}</span>
+<span class="sd">      \\newcommand{\\dataStride3}{1}</span>
+<span class="sd">      \\newcommand{\\recoParamsnumK}{50}</span>
+<span class="sd">      \\newcommand{\\outputPath}{../data/}</span>
+<span class="sd">      \\newcommand{\\logPath}{reconstruct.log}</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">json_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">in_path</span><span class="p">)</span>
+    <span class="n">json_dct</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+    <span class="n">json_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">lstMakros</span> <span class="o">=</span> <span class="n">_dict_to_tex</span><span class="p">(</span><span class="n">json_dct</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">out_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">out_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">mm</span> <span class="ow">in</span> <span class="n">lstMakros</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">mm</span><span class="p">)</span>
+        <span class="n">out_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">mm</span><span class="p">)</span></div>
+    <span class="n">out_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_dict_to_tex</span><span class="p">(</span><span class="n">dct</span><span class="p">,</span> <span class="n">in_string</span><span class="p">):</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">in_string</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">in_string</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">newcommand{</span><span class="se">\\</span><span class="s1">&#39;</span>
+
+    <span class="k">for</span> <span class="n">kk</span> <span class="ow">in</span> <span class="n">dct</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="c1"># if we encounter a dictionary, we simply extend the definition of</span>
+        <span class="c1"># then corresponding makro</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">dct</span><span class="p">[</span><span class="n">kk</span><span class="p">])</span> <span class="o">==</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="o">*</span><span class="n">_dict_to_tex</span><span class="p">(</span><span class="n">dct</span><span class="p">[</span><span class="n">kk</span><span class="p">],</span> <span class="n">in_string</span> <span class="o">+</span> <span class="n">kk</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">dct</span><span class="p">[</span><span class="n">kk</span><span class="p">])</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">ll</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dct</span><span class="p">[</span><span class="n">kk</span><span class="p">]):</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">in_string</span> <span class="o">+</span> <span class="n">kk</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;}{&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">ll</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;}&#39;</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># leave out anything that contains a %, since we get all sorts</span>
+            <span class="c1"># of problems in tex, there</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">dct</span><span class="p">[</span><span class="n">kk</span><span class="p">])</span><span class="o">+</span><span class="n">kk</span><span class="p">)</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;%&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">in_string</span> <span class="o">+</span> <span class="n">kk</span> <span class="o">+</span> <span class="s1">&#39;}{&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">dct</span><span class="p">[</span><span class="n">kk</span><span class="p">])</span><span class="o">+</span><span class="s1">&#39;}&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">res</span>
 
 <div class="viewcode-block" id="save_params"><a class="viewcode-back" href="../../data.html#camiba.data.save_params">[docs]</a><span class="k">def</span> <span class="nf">save_params</span><span class="p">(</span><span class="n">dct_vars</span><span class="p">,</span> <span class="n">str_p</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
