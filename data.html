@@ -103,28 +103,20 @@ the values are numpy arrays of the same length</p>
 <div>Save Dictionary to TeX Makros</div></blockquote>
 <p>This function takes a path to a JSON file and outputs a file of TeX
 makros to make the values in the JSON file available to TeX. It may
-be very useful if would one like to run simulations parametrized by an
+be very useful if one would like to run simulations parametrized by an
 external file and automatically include the used values in tex.</p>
 <p>If one had a file config.json looking like:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">{</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;measurementDataPath&quot;</span><span class="p">:</span> <span class="s2">&quot;museData.mat&quot;</span><span class="p">,</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;measurementDataName&quot;</span><span class="p">:</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span>
-</pre></div>
-</div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;dictionaryDataPath&quot;</span><span class="p">:</span> <span class="s2">&quot;dictData%(d).mat&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;dictionaryDataPath&quot;</span><span class="p">:</span> <span class="s2">&quot;dictData%(d).mat&quot;</span><span class="p">,</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;dictionaryDataName&quot;</span><span class="p">:</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span>
-</pre></div>
-</div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;dataShift&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;dataShift&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;dataStride&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
-</pre></div>
-</div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;recoParams&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;recoParams&quot;</span><span class="p">:</span> <span class="p">{</span>
 <span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;numK&quot;</span><span class="p">:</span> <span class="mi">50</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="p">},</span>
-</pre></div>
-</div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;outputPath&quot;</span><span class="p">:</span> <span class="s2">&quot;../data/&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;outputPath&quot;</span><span class="p">:</span> <span class="s2">&quot;../data/&quot;</span><span class="p">,</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;logPath&quot;</span><span class="p">:</span> <span class="s2">&quot;reconstruct.log&quot;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">}</span>
 </pre></div>
@@ -148,6 +140,22 @@ external file and automatically include the used values in tex.</p>
 \newcommand{\logPath}{reconstruct.log}
 </pre></div>
 </div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>in_path</strong> : str</p>
+<blockquote>
+<div><p>path to the json file</p>
+</div></blockquote>
+<p><strong>out_path</strong> : str</p>
+<blockquote class="last">
+<div><p>path to the tex file that will be created</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
