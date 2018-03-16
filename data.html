@@ -47,6 +47,9 @@ PGFplots and TikZ.</p>
 <em class="property">class </em><code class="descclassname">camiba.data.</code><code class="descname">Decoder</code><span class="sig-paren">(</span><em>*</em>, <em>object_hook=None</em>, <em>parse_float=None</em>, <em>parse_int=None</em>, <em>parse_constant=None</em>, <em>strict=True</em>, <em>object_pairs_hook=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/data.html#Decoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.data.Decoder" title="Permalink to this definition">¶</a></dt>
 <dd><p>This class can be used to correctly decode integers in json files
 to Python integers right upon parsing of the json file.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;file.json&#39;</span><span class="p">,</span> <span class="bp">cls</span><span class="o">=</span><span class="n">camiba</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Decoder</span><span class="p">)</span>
+</pre></div>
+</div>
 <dl class="method">
 <dt id="camiba.data.Decoder.decode">
 <code class="descname">decode</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/camiba/data.html#Decoder.decode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#camiba.data.Decoder.decode" title="Permalink to this definition">¶</a></dt>
