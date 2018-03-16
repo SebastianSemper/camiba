@@ -183,6 +183,10 @@
 
 
 <div class="viewcode-block" id="Decoder"><a class="viewcode-back" href="../../data.html#camiba.data.Decoder">[docs]</a><span class="k">class</span> <span class="nc">Decoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONDecoder</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This class can be used to correctly decode integers in json files</span>
+<span class="sd">    to Python integers right upon parsing of the json file.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
 <div class="viewcode-block" id="Decoder.decode"><a class="viewcode-back" href="../../data.html#camiba.data.Decoder.decode">[docs]</a>    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
         <span class="n">result</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">s</span><span class="p">)</span></div>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
