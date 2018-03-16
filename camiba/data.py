@@ -143,6 +143,31 @@ def csv_to_dict(p):
     return dct_res
 
 
+class Decoder(json.JSONDecoder):
+    '''
+    This class can be used to correctly decode integers in json files
+    to Python integers right upon parsing of the json file.
+
+    >>> json.load('file.json', cls=camiba.data.Decoder)
+    '''
+    def decode(self, s):
+        result = super().decode(s)
+        return self._decode(result)
+
+    def _decode(self, o):
+        if isinstance(o, str):
+            try:
+                return int(o)
+            except ValueError:
+                return o
+        elif isinstance(o, dict):
+            return {k: self._decode(v) for k, v in o.items()}
+        elif isinstance(o, list):
+            return [self._decode(v) for v in o]
+        else:
+            return o
+
+
 def json_to_tex(in_path, out_path, verbose=False):
     """
         Save Dictionary to TeX Makros
@@ -201,6 +226,70 @@ def json_to_tex(in_path, out_path, verbose=False):
     json_file.close()
 
     lstMakros = _dict_to_tex(json_dct, "")
+
+    out_file = open(out_path, 'w')
+    for mm in lstMakros:
+        if verbose:
+            print(mm)
+        out_file.write(mm)
+    out_file.close()
+
+
+def dict_to_tex(in_dict, out_path, verbose=False):
+    """
+        Save Dictionary to TeX Makros
+
+    This function takes a path to a JSON file and outputs a file of TeX
+    makros to make the values in the JSON file available to TeX. It may
+    be very useful if one would like to run simulations parametrized by an
+    external file and automatically include the used values in tex.
+
+    If one had a dictionary looking like:
+
+    >>> {
+    >>>     "measurementDataPath": "museData.mat",
+    >>>     "measurementDataName": "data",
+    >>>     "dictionaryDataPath": "dictData%(d).mat",
+    >>>     "dictionaryDataName": "data",
+    >>>     "dataShift": [0,0,0],
+    >>>     "dataStride": [1,1,1],
+    >>>     "recoParams": {
+    >>>         "numK": 50
+    >>>     },
+    >>>     "outputPath": "../data/",
+    >>>     "logPath": "reconstruct.log"
+    >>> }
+
+    then issuing
+
+    >>> dict_to_tex(dictionary.json, dictionary.tex)
+
+    would result in the file config.tex looking like:
+
+    .. code-block:: none
+
+      \\newcommand{\\measurementDataPath}{museData.mat}
+      \\newcommand{\\measurementDataName}{data}
+      \\newcommand{\\dictionaryDataName}{data}
+      \\newcommand{\\dataShift1}{0}
+      \\newcommand{\\dataShift2}{0}
+      \\newcommand{\\dataShift3}{0}
+      \\newcommand{\\dataStride1}{1}
+      \\newcommand{\\dataStride2}{1}
+      \\newcommand{\\dataStride3}{1}
+      \\newcommand{\\recoParamsnumK}{50}
+      \\newcommand{\\outputPath}{../data/}
+      \\newcommand{\\logPath}{reconstruct.log}
+
+    Parameters
+    ----------
+    in_dict : dict
+        the dictionary to export
+    out_path : str
+        path to the tex file that will be created
+    """
+
+    lstMakros = _dict_to_tex(in_dict, "")
 
     out_file = open(out_path, 'w')
     for mm in lstMakros:
