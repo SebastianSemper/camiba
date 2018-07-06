@@ -44,3 +44,4 @@ Multilevel Matrices
 from .basic import *
 from .pack import *
 from .vand import *
+from .multilevel import *

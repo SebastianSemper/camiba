@@ -115,7 +115,7 @@ def khatri_rao(X, Y):
     """
     # check if both matrices have same smount of columns
     if X.shape[1] != Y.shape[1]:
-        raise TypeError('Matrices can not be multiplied')
+        raise TypeError('Matrices cannot be multiplied')
 
     # the number of rows of the output
     N = X.shape[0]*Y.shape[0]

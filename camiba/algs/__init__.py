@@ -52,3 +52,4 @@ from .iht import *
 from .irls import *
 from .ista import *
 from .omp import *
+from .esprit import *

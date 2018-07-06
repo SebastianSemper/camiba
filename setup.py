@@ -26,8 +26,44 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Camiba. If not, see <http://www.gnu.org/licenses/>.
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
 from sphinx.setup_command import BuildDoc
+from distutils import sysconfig
+from Cython.Build import cythonize
+import numpy
+
+sysconfig.get_config_vars()['CFLAGS'] = ''
+sysconfig.get_config_vars()['OPT'] = ''
+sysconfig.get_config_vars()['PY_CFLAGS'] = ''
+sysconfig.get_config_vars()['PY_CORE_CFLAGS'] = ''
+sysconfig.get_config_vars()['CC'] = 'gcc'
+sysconfig.get_config_vars()['CXX'] = 'g++'
+sysconfig.get_config_vars()['BASECFLAGS'] = ''
+sysconfig.get_config_vars()['CCSHARED'] = '-fPIC -Ofast'
+sysconfig.get_config_vars()['LDSHARED'] = 'gcc -shared'
+sysconfig.get_config_vars()['CPP'] = ''
+sysconfig.get_config_vars()['CPPFLAGS'] = ''
+sysconfig.get_config_vars()['BLDSHARED'] = ''
+sysconfig.get_config_vars()['CONFIGURE_LDFLAGS'] = ''
+sysconfig.get_config_vars()['LDFLAGS'] = ''
+sysconfig.get_config_vars()['PY_LDFLAGS'] = ''
+
+lstIncludes = [numpy.get_include()]
+
+ext_modules = [
+    Extension(
+        "*",
+        ["camiba/linalg/*.pyx"],
+        include_dirs=lstIncludes,
+        extra_compile_args=['-march=native', '-march=native']
+    ),
+    Extension(
+        "*",
+        ["camiba/algs/*.pyx"],
+        include_dirs=lstIncludes,
+        extra_compile_args=['-march=native', '-march=native']
+    )
+]
 
 setup(
     name='camiba',
@@ -68,4 +104,5 @@ setup(
     },
     install_requires=['numpy', 'sphinx', 'scipy', 'numpydoc'],
     python_requires='>=3',
+    ext_modules=cythonize(ext_modules)
 )

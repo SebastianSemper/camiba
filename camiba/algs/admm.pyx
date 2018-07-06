@@ -20,11 +20,24 @@ is so general, many variants exist and many optimizations problems can be
 recast into a problem, which can be solved by a specific ADMM.
 """
 
+import time as tm
+import pdb
 import numpy as np
 import numpy.linalg as npl
 from ..linalg.basic import soft_thrshld
 from ..linalg.multilevel import *
+cimport numpy as np
 
+def namestr(obj, namespace):
+    return [name for name in namespace if namespace[name] is obj]
+
+def printdType(objlst, ns):
+    for oo in objlst:
+        print(namestr(oo, ns))
+        try:
+            print(oo.dtype)
+        except:
+            print(type(oo))
 
 def bpdn_1d(A, b, x_init, rho, alpha, num_steps):
     """
@@ -106,7 +119,7 @@ def anm_lse_1d(A, AH, AHA, y, rho, tau, num_steps):
         Hermitian transpose of system matrix
     AHA : ndarray
         Gram matrix of system matrix
-    b : ndarray
+    y : ndarray
         measurement vector
     rho : float
         parameter for augmented lagrangian
@@ -141,16 +154,18 @@ def anm_lse_1d(A, AH, AHA, y, rho, tau, num_steps):
     Winv = 1. / (np.linspace(L, 1, L))
     Winv[0] = 2. / L
 
+    arr_d = np.array([L])
+
     for ii in range(num_steps):
 
         t = Z[L, L] + rhoInv * (Lb[L, L] + tauHalf)
 
         x = Inv.dot(
-            AH.dot(b) + 2 * (Lb[:L, L] + rho * Z[:L, L])
+            AH.dot(y) + 2 * (Lb[:L, L] + rho * Z[:L, L])
         )
 
         u = Winv * (
-            ToepAdj(Z[:L, :L] + rhoInv * Lb[:L, :L]) + e1
+            hermToepAdj(arr_d, arr_d, Z[:L, :L] + rhoInv * Lb[:L, :L]) + e1
         )
 
         T[:L, :L] = spToep(u.conj())
@@ -169,46 +184,18 @@ def anm_lse_1d(A, AH, AHA, y, rho, tau, num_steps):
     return (x, T[:L, :L], t)
 
 
-def _calc_w(arr_d):
-    """
-        Calculate Weighting Matrix in Derivative
+cpdef np.ndarray anm_lse_nd(
+    np.ndarray A,
+    np.ndarray AH,
+    np.ndarray AHA,
+    np.ndarray y,
+    np.float64_t rho,
+    np.float64_t tau,
+    np.int64_t num_steps,
+    np.ndarray arr_d,
+    bint verbose=False
+):
 
-    This is needed in anm_lse_nd to generate the diagonal of a weighting
-    matrix during the gradient decent step.
-    """
-
-    ten_w = np.ones((*arr_d,))
-    return _calc_wrec(arr_d, ten_w)
-
-
-def _calc_wrec(arr_d, ten_w):
-    """
-        Recursion Function in Weight Matrix Calculation
-
-    This is a recursive function used in _calc_w.
-    """
-    # number of dimensions in current level
-    num_d = arr_d.shape[0]
-
-    # get size of resulting block toeplitz matrix
-    prdD0 = np.prod(arr_d)
-
-    # get an array of all partial sequential products
-    # starting at the front
-    prdD1 = np.prod(arr_d[1:])
-
-    arrF = 2 * (arr_d[0] - (np.arange(arr_d[0]) + 1) + 1)
-    arrF[0] -= arr_d[0]
-
-    if num_d > 1:
-        for nn in range(arr_d[0]):
-            _calc_wrec(arr_d[1:], ten_w[nn])
-
-    for ii in range(arr_d[0]):
-        ten_w[ii] *= arrF[ii]
-
-
-def anm_lse_nd(A, AH, AHA, y, rho, tau, num_steps, arr_d):
     """
     Atomic Norm Denoising for 1D Line Spectral Estimation
 
@@ -230,16 +217,18 @@ def anm_lse_nd(A, AH, AHA, y, rho, tau, num_steps, arr_d):
         Hermitian transpose of system matrix
     AHA : ndarray
         Gram matrix of system matrix
-    b : ndarray
+    y : ndarray
         measurement vector
     rho : float
         parameter for augmented lagrangian
-    alpha : float
+    tau : float
         thresholding parameter
     num_steps : int
         number of steps
     arr_d : ndarray
         dimension sizes
+    verbose : bool
+        verbosity flag
 
     Returns
     -------
@@ -247,50 +236,80 @@ def anm_lse_nd(A, AH, AHA, y, rho, tau, num_steps, arr_d):
         x, T(u), t
     """
     # detect datatype
-    dtype = np.promote_types(A.dtype, y.dtype)
+    prbDtype = np.promote_types(A.dtype, y.dtype)
 
-    # extract the shaped
-    K, L = A.shape
+    # extract the shapes
+    cdef int K = A[:].shape[0]
+    cdef int L = A[:].shape[1]
 
-    mat_eye = np.eye(L)
-    e1 = -L * .5 * (tau / rho) * mat_eye[0]
-    rhoInv = 1. / rho
-    tauHalf = -.5 * tau
+    # size of the array of defining elements of the ML-Toeplitz matrix
+    cdef np.ndarray arr_s = 2 * arr_d - 1
+    arr_s[0] = arr_d[0]
 
-    AHy = AH.dot(y)
-    Inv = npl.inv(AHA + 2 * rho * mat_eye)
+    cdef np.ndarray mat_eye = np.eye((L), dtype=prbDtype)
 
-    x = np.zeros((L), dtype)
+    cdef np.complex128_t tauHalf = -.5 * tau
 
-    t = 0
+    cdef np.ndarray AHy = AH.dot(y)
 
-    u = np.zeros((*arr_d,), dtype)
+    cdef np.ndarray x = np.zeros((L), dtype=prbDtype)
 
-    T = np.zeros((L + 1, L + 1), dtype)
+    cdef np.complex128_t t = 0
 
-    Lb = np.zeros((L + 1, L + 1), dtype)
-    Z = np.zeros((L + 1, L + 1), dtype)
+    cdef np.ndarray u = np.zeros((*arr_s,), dtype=prbDtype)
 
-    Winv = 1. / _calc_w(arr_d)
+    cdef np.ndarray T = np.zeros((L + 1, L + 1), dtype=prbDtype)
 
-    for ii in range(steps):
+    cdef np.ndarray Lb = np.zeros((L + 1, L + 1), dtype=prbDtype)
+    cdef np.ndarray Z = np.zeros((L + 1, L + 1), dtype=prbDtype)
 
-        t = Z[L, L] + rhoInv * (Lb[L, L] + tauHalf)
+    cdef np.ndarray Winv = hermToepAdj(
+        1.0 * np.ones(
+            (L, L),
+            dtype=prbDtype
+        ) - 0.5*np.eye(
+            (L),
+            dtype=prbDtype
+        ),
+        u
+    )
+    Winv[Winv < 0.01] = 1.0
+    Winv = 1.0 / Winv
 
-        x = Inv.dot(
-            AHy + 2 * (Lb[:L, L] + rho * Z[:L, L])
+    e1 = np.zeros((L, L), dtype=prbDtype)
+    e1.flat[0] = - .5 * tau / rho
+
+    e1 = hermToepAdj(e1, u)
+
+
+    cdef int ii
+
+    cdef np.ndarray Zspec = np.empty(L + 1, dtype=prbDtype)
+    cdef np.ndarray Zbase = np.empty((L + 1, L + 1), dtype=prbDtype)
+
+
+    for ii in range(num_steps):
+
+        num_tm_s = tm.time()
+        t = Z[L, L] + (1. / rho) * (Lb[L, L] + tauHalf)
+
+        x = npl.solve(
+            AHA + 2.0 * rho * mat_eye,
+            AHy + 2.0 * (Lb[:L, L] + rho * Z[:L, L])
         )
 
         u = Winv * (
-            ToepAdj(arr_d, Z[:L, :L] + rhoInv * Lb[:L, :L]) + e1
+            hermToepAdj((Z[:L, :L] + (1. / rho) * Lb[:L, :L]).conj() , u) + e1
         )
 
-        T[:L, :L] = Toep(arr_d, u)
+        hT = hermToep(u)
+
+        T[:L, :L] = 0.5 * (hT + hT.conj().T)
         T[:L, L] = x
         T[L, :L] = np.conj(x)
         T[L, L] = t
 
-        Zspec, Zbase = npl.eigh(T - rhoInv * Lb)
+        Zspec[:], Zbase[:] = npl.eigh(T - (2. / rho) * Lb)
 
         arrPos = (Zspec > 0)
 
@@ -298,5 +317,15 @@ def anm_lse_nd(A, AH, AHA, y, rho, tau, num_steps, arr_d):
         Z = 0.5 * (Z + Z.T.conj())
 
         Lb += rho * (Z - T)
+        Lb = 0.5 * (Lb + Lb.T.conj())
 
-    return (x, Toep(u), t)
+        if verbose:
+            print(
+                "Iteration step %d took %fs" % (ii + 1, tm.time() - num_tm_s)
+            )
+            print(
+                "Current error is %f" % npl.norm(A.dot(x) - y)
+            )
+
+
+    return hermToep(u)
