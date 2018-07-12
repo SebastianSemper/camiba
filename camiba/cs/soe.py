@@ -35,6 +35,43 @@ from ..algs import omp
 from .scenario import Scenario
 
 
+def _largest_div(
+    num_n
+):
+    """
+        Calculates the largest divisor of a natural number num_n
+    """
+
+    num_d = np.ceil(np.sqrt(num_n))
+    while True:
+        if num_n % num_d == 0:
+            return (int(num_d), int(num_n/num_d))
+        num_d -= 1
+
+
+def _find_block_length(
+    num_m,
+    num_p
+):
+    """
+        Finds the optimal block length num_l
+        for given dimensions and block advance
+    """
+
+    num_l_init = int(np.ceil((float(num_m) + float(num_p))/(num_p+1.0)))
+    num_l1 = num_l_init
+    num_l2 = num_l_init - 1
+    while True:
+        if (num_m - num_l1) % num_p == 0:
+            return int(num_l1)
+
+        if (num_m - num_l2) % num_p == 0:
+            return int(num_l2)
+
+        num_l1 += 1
+        num_l2 -= 1
+
+
 class Soe(Scenario):
 
     """
@@ -602,38 +639,6 @@ class Soe(Scenario):
         elif self._mos_method == 'new':
             return self._do_new(mat_B)
 
-    def _largest_div(
-        self,
-        num_n		# number to split into factors
-    ):
-        """
-            Calculates the largest divisor of a natural number num_n
-        """
-
-        num_d = np.ceil(np.sqrt(num_n))
-        while True:
-            if num_n % num_d == 0:
-                return (int(num_d), int(num_n/num_d))
-            num_d -= 1
-
-    def _find_block_length(self, num_m, num_p):
-        """
-            Finds the optimal block length num_l
-            for given dimensions and block advance
-        """
-
-        num_l_init = int(np.ceil((float(num_m) + float(num_p))/(num_p+1.0)))
-        num_l1 = num_l_init
-        num_l2 = num_l_init - 1
-        while True:
-            if (num_m - num_l1) % num_p == 0:
-                return int(num_l1)
-
-            if (num_m - num_l2) % num_p == 0:
-                return int(num_l2)
-
-            num_l1 += 1
-            num_l2 -= 1
 
     def _est_lopes(self, vec_b):
         numT1 = np.median(np.abs(vec_b[: self.num_m1])) / self._num_gamma
@@ -737,7 +742,7 @@ class Soe(Scenario):
 
                 # estimate the sparsity order
                 num_s_est = self.estimate(arrB)
-                
+
                 for kk in dct_res.items():
                     key = kk[0]
                     dct_res[key][ii, jj] = dct_fun_compare[key](

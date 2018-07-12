@@ -184,7 +184,13 @@ def anm_lse_1d(A, AH, AHA, y, rho, tau, num_steps):
     return (x, T[:L, :L], t)
 
 
-cpdef np.ndarray anm_lse_nd(
+cdef np.ndarray dervA_Tu(
+    np.ndarray A,
+    np.ndarray ten_u
+):
+    return hermToepAdj(A - 0.5*A.flat[0], ten_u)
+
+cpdef np.ndarray anm_lse_r_d(
     np.ndarray A,
     np.ndarray AH,
     np.ndarray AHA,
@@ -242,6 +248,11 @@ cpdef np.ndarray anm_lse_nd(
     cdef int K = A[:].shape[0]
     cdef int L = A[:].shape[1]
 
+    # account for the MMW case
+    cdef int M = 1
+    if len(y[:].shape) > 1:
+        M = y[:].shape[1]
+
     # size of the array of defining elements of the ML-Toeplitz matrix
     cdef np.ndarray arr_s = 2 * arr_d - 1
     arr_s[0] = arr_d[0]
@@ -252,24 +263,25 @@ cpdef np.ndarray anm_lse_nd(
 
     cdef np.ndarray AHy = AH.dot(y)
 
-    cdef np.ndarray x = np.zeros((L), dtype=prbDtype)
+    cdef np.ndarray x = np.zeros((L, M), dtype=prbDtype)
 
-    cdef np.complex128_t t = 0
+    cdef np.ndarray t = np.zeros((M, M), dtype=prbDtype)
 
     cdef np.ndarray u = np.zeros((*arr_s,), dtype=prbDtype)
 
-    cdef np.ndarray T = np.zeros((L + 1, L + 1), dtype=prbDtype)
+    cdef np.ndarray T = np.zeros((L + M, L + M), dtype=prbDtype)
 
-    cdef np.ndarray Lb = np.zeros((L + 1, L + 1), dtype=prbDtype)
-    cdef np.ndarray Z = np.zeros((L + 1, L + 1), dtype=prbDtype)
+    cdef np.ndarray Lb = np.zeros((L + M, L + M), dtype=prbDtype)
+    cdef np.ndarray Z = np.zeros((L + M, L + M), dtype=prbDtype)
+    cdef np.ndarray Zold = np.zeros((L + M, L + M), dtype=prbDtype)
 
     cdef np.ndarray Winv = hermToepAdj(
         1.0 * np.ones(
             (L, L),
             dtype=prbDtype
-        ) - 0.5*np.eye(
-            (L),
-            dtype=prbDtype
+        # ) - 0.5*np.eye(
+        #     (L),
+        #     dtype=prbDtype
         ),
         u
     )
@@ -277,47 +289,67 @@ cpdef np.ndarray anm_lse_nd(
     Winv = 1.0 / Winv
 
     e1 = np.zeros((L, L), dtype=prbDtype)
-    e1.flat[0] = - .5 * tau / rho
+    e1.flat[0] = - .25 * M * tau / rho
 
     e1 = hermToepAdj(e1, u)
+
+    u[:] = e1[:]
 
 
     cdef int ii
 
-    cdef np.ndarray Zspec = np.empty(L + 1, dtype=prbDtype)
-    cdef np.ndarray Zbase = np.empty((L + 1, L + 1), dtype=prbDtype)
+    cdef np.ndarray Zspec = np.empty(L + M, dtype=prbDtype)
+    cdef np.ndarray Zbase = np.empty((L + M, L + M), dtype=prbDtype)
 
+
+    cdef np.float64_t mu = 10.0
+    cdef np.float64_t nu = 2.0
+    cdef np.float64_t rk
+    cdef np.float64_t sk
 
     for ii in range(num_steps):
 
         num_tm_s = tm.time()
-        t = Z[L, L] + (1. / rho) * (Lb[L, L] + tauHalf)
+        t[:] = Z[L:, L:] + (1. / rho) * (Lb[L:, L:] + tauHalf)
 
-        x = npl.solve(
+        # print(AHy[:].shape)
+        # print((AHA + 2.0 * rho * mat_eye).shape)
+        # print((AHy + 2.0 * (Lb[:L, L:] + rho * Z[:L, L:]))[:].shape)
+        x[:] = npl.solve(
             AHA + 2.0 * rho * mat_eye,
-            AHy + 2.0 * (Lb[:L, L] + rho * Z[:L, L])
+            AHy + 2.0 * (Lb[:L, L:] + rho * Z[:L, L:])
         )
 
-        u = Winv * (
-            hermToepAdj((Z[:L, :L] + (1. / rho) * Lb[:L, :L]).conj() , u) + e1
+        u[:] = Winv * (
+            hermToepAdj((Z[:L, :L] + (1. / rho) * Lb[:L, :L]), u) + e1
         )
 
         hT = hermToep(u)
 
+        # print(T[:L, L:].shape, x[:].shape)
         T[:L, :L] = 0.5 * (hT + hT.conj().T)
-        T[:L, L] = x
-        T[L, :L] = np.conj(x)
-        T[L, L] = t
+        T[:L, L:] = x
+        T[L:, :L] = x.conj().T
+        T[L:, L:] = t
 
         Zspec[:], Zbase[:] = npl.eigh(T - (2. / rho) * Lb)
 
         arrPos = (Zspec > 0)
 
+        Zold[:] = Z[:]
         Z = Zbase[:, arrPos].dot((Zspec[arrPos] * Zbase[:, arrPos].conj()).T)
         Z = 0.5 * (Z + Z.T.conj())
 
         Lb += rho * (Z - T)
         Lb = 0.5 * (Lb + Lb.T.conj())
+
+        rk = np.linalg.norm(Zspec[Zspec<=0])
+        sk = np.linalg.norm(Z - Zold)
+
+        if rk > (mu * sk):
+            rho *= nu
+        elif sk > (mu * rk):
+            rho /= nu
 
         if verbose:
             print(
@@ -325,6 +357,12 @@ cpdef np.ndarray anm_lse_nd(
             )
             print(
                 "Current error is %f" % npl.norm(A.dot(x) - y)
+            )
+            print(
+                "Current primal error is %f" % rk
+            )
+            print(
+                "Current dual error is %f" % sk
             )
 
 

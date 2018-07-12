@@ -20,6 +20,7 @@
 
 import numpy as np
 import numpy.linalg as npl
+from ..cs.soe import _largest_div, _find_block_length
 
 
 def one_d(mat_cov, num_s):
@@ -47,25 +48,62 @@ def one_d(mat_cov, num_s):
     return phi
 
 
-def two_d(mat_cov, num_s):
+def smoothing(arr_y, arr_d, arr_p):
     """
-        Two-dimensional ESPRIT
+    R-dimensional smoothing for single snapshot ESPRIT
 
     Parameters
     ----------
 
-    mat_cov : ndarray
-        covariance matrix of the signal
-    num_s : int
-        number of frequencies in the signal
+    arr_y : ndarray
+        array containing the measurements
+    arr_d : ndarray
+        array containing the size of each dimension
+    arr_k : ndarray
+        array containing the block advance in each dimension
 
     Returns
     -------
     ndarray
-        extracted frequencies
+    generated measurements
     """
 
-    return 0
+    arr_l = np.empty_like(arr_d)
+    arr_k = np.empty_like(arr_d)
+
+    for ii in range(arr_d.shape[0]):
+        arr_l[ii] = _find_block_length(arr_d[ii], arr_p[ii])
+        arr_k[ii] = int((arr_d[ii] - arr_l[ii]) / arr_p[ii] + 1)
+
+    lst_y = []
+
+    smoothing_rec(
+        arr_y.reshape((*arr_d,)),
+        arr_p,
+        arr_k,
+        arr_l,
+        lst_y,
+        0
+        )
+
+    return (np.array(lst_y), arr_l)
+
+
+def smoothing_rec(arr_y, arr_p, arr_k, arr_l, lst_y, axis):
+    if arr_p.shape[0] == 0:
+        lst_y.append(np.copy(arr_y).reshape((-1)))
+    else:
+        for ii in range(arr_k[0]):
+            arr_z = np.swapaxes(arr_y, 0, axis)
+            smoothing_rec(
+                arr_z[ii*arr_p[0]:(ii*arr_p[0] + arr_l[0]), :],
+                arr_p[1:],
+                arr_k[1:],
+                arr_l[1:],
+                lst_y,
+                axis+1
+            )
+
 
 
 def r_d(mat_cov, arr_d, num_s):
@@ -125,6 +163,21 @@ def r_d(mat_cov, arr_d, num_s):
         )
 
     return arr_res
+
+
+def _build_smooth_subsel(arr_p, arr_k, arr_l, num_N):
+
+    ten_J = np.empty((np.prod(arr_k), np.prod(arr_l), num_N))
+
+    for dd in range(arr_p.shape[0]):
+        mat_eye = np.eye(arr_l[dd])
+        mat_zero = np.zeros((arr_l[dd], arr_l[dd] * arr_k[dd]))
+        ten_J_tmp = np.ones(1)
+        for ii in range(arr_k[dd]):
+            mat_tmp = np.copy(mat_zero)
+            mat_tmp[:, arr_p[dd]*ii: arr_p[dd]*ii + arr_l[dd]] = mat_eye[:]
+            ten_J_tmp = np.kron(ten_J_tmp, mat_tmp)
+        print(ten_J_tmp.shape)
 
 
 def _build_subsel(arr_d):

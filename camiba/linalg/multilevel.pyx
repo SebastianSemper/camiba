@@ -88,15 +88,22 @@ cpdef np.ndarray hermToep(
     np.ndarray ten_U,
     bint verbose=False
 ):
-    cdef np.ndarray arr_s = np.array([*(ten_U[0,:].shape)]).astype('int')
-    cdef np.ndarray arr_d = ((arr_s + 1) / 2).astype('int')
+    cdef np.ndarray arr_s
+    cdef np.ndarray arr_d
 
-    cdef int num_blk_s = np.prod(arr_d)
-    cdef int num_n = ten_U[:].shape[0] * num_blk_s
+    cdef int num_blk_s
+    cdef int num_n
 
-    cdef np.ndarray mat_hT = np.zeros((num_n, num_n), dtype=ten_U.dtype)
+    cdef np.ndarray mat_hT
 
     cdef int ii, dd
+    arr_s = np.array([*(ten_U[0,:].shape)]).astype('int')
+    arr_d = ((arr_s + 1) / 2).astype('int')
+
+    num_blk_s = np.prod(arr_d)
+    num_n = ten_U[:].shape[0] * num_blk_s
+    mat_hT = np.zeros((num_n, num_n), dtype=ten_U.dtype)
+
     for ii in range(ten_U[:].shape[0]):
         for dd in range(ii + 1):
             mat_hT[
@@ -244,7 +251,7 @@ cpdef np.ndarray hermToepAdj(
     cdef np.ndarray ten_s = np.zeros_like(ten_u[:], dtype=mat_A.dtype)
 
     cdef int ss, dd, num_blk_s
-    
+
     num_blk_s = np.prod(arr_d)
     for ss in range(ten_u[:].shape[0]):
         for dd in range(ss + 1):
