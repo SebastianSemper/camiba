@@ -285,7 +285,9 @@ class Scenario:
 
                 # generate ground truth and noisy measurement
                 arrX = fun_x(num_s)
-                arrB = self.compress(arrX) + fun_noise(snr, self._num_c)
+                arrB = self.compress(
+                    self.to_signal(arrX)
+                ) + fun_noise(snr, self._num_c)
 
                 # do reconstruction
                 arrXEst = self.recover(arrB, args)

@@ -97,100 +97,7 @@ def bpdn_1d(A, b, x_init, rho, alpha, num_steps):
     return z
 
 
-def anm_lse_1d(A, AH, AHA, y, rho, tau, num_steps):
-    """
-    Atomic Norm Denoising for 1D Line Spectral Estimation
-
-    This ADMM approximates a solution to
-
-    min_[x,u,t] 1/(2n) trace T(u) + 1/2 t
-    s.t.
-    [[T(u), x], [x^H, t]] >= 0, ||b - Ax||_2 < z
-
-    for given matrix A, vector b and z > 0. Moreover, T(u) maps the vector
-    u to a Hermitian Toeplitz matrix defined by u.
-
-    Parameters
-    ----------
-
-    A : ndarray
-        system matrix
-    AH : ndarray
-        Hermitian transpose of system matrix
-    AHA : ndarray
-        Gram matrix of system matrix
-    y : ndarray
-        measurement vector
-    rho : float
-        parameter for augmented lagrangian
-    alpha : float
-        thresholding parameter
-    num_steps : int
-        number of steps
-
-    Returns
-    -------
-    (ndarray, ndarray, ndarray)
-        x, T(u), t
-    """
-    dtype = np.promote_types(A.dtype, y.dtype)
-
-    K, L = A.shape
-
-    mat_eye = np.eye(L)
-    e1 = -L * .5 * (tau / rho) * mat_eye[0]
-    rhoInv = 1. / rho
-    tauHalf = -.5 * tau
-
-    Inv = npl.inv(AHA + 2 * rho * mat_eye)
-
-    x = np.zeros((L), dtype)
-    t = 0
-    u = np.zeros((L), dtype)
-    T = np.zeros((L + 1, L + 1), dtype)
-    Lb = np.zeros((L + 1, L + 1), dtype)
-    Z = np.zeros((L + 1, L + 1), dtype)
-
-    Winv = 1. / (np.linspace(L, 1, L))
-    Winv[0] = 2. / L
-
-    arr_d = np.array([L])
-
-    for ii in range(num_steps):
-
-        t = Z[L, L] + rhoInv * (Lb[L, L] + tauHalf)
-
-        x = Inv.dot(
-            AH.dot(y) + 2 * (Lb[:L, L] + rho * Z[:L, L])
-        )
-
-        u = Winv * (
-            hermToepAdj(arr_d, arr_d, Z[:L, :L] + rhoInv * Lb[:L, :L]) + e1
-        )
-
-        T[:L, :L] = spToep(u.conj())
-        T[:L, L] = x
-        T[L, :L] = np.conj(x)
-        T[L,  L] = t
-
-        Zspec, Zbase = npl.eigh(T - rhoInv * Lb)
-        arrPos = (Zspec > 0)
-
-        Z = Zbase[:, arrPos].dot((Zspec[arrPos] * Zbase[:, arrPos].conj()).T)
-        Z = 0.5 * (Z + Z.T.conj())
-
-        Lb += rho * (Z - T)
-
-    return (x, T[:L, :L], t)
-
-
-cdef np.ndarray dervA_Tu(
-    np.ndarray A,
-    np.ndarray ten_u
-):
-    return hermToepAdj(A - 0.5*A.flat[0], ten_u)
-
-cpdef np.ndarray anm_lse_r_d(
+cpdef anm_lse_r_d(
     np.ndarray A,
     np.ndarray AH,
     np.ndarray AHA,
@@ -199,7 +106,13 @@ cpdef np.ndarray anm_lse_r_d(
     np.float64_t tau,
     np.int64_t num_steps,
     np.ndarray arr_d,
-    bint verbose=False
+    np.float64_t mu,
+    np.float64_t nu,
+    np.float64_t alpha,
+    bint adaptive=False,
+    bint verbose=False,
+    bint debug=False,
+    callback=None
 ):
 
     """
@@ -233,14 +146,37 @@ cpdef np.ndarray anm_lse_r_d(
         number of steps
     arr_d : ndarray
         dimension sizes
+    mu : float
+    nu : float
+    alpha : float
+    adaptive : bool
+        adaptivity flag
     verbose : bool
         verbosity flag
+    debug : bool
+        verbosity flag
+    callback : callable
+        callable to evaluate after each iteration
 
     Returns
     -------
     (ndarray, ndarray, ndarray)
         x, T(u), t
     """
+
+    # debugging
+    if debug:
+        callback_vals = {
+            'err': [],
+            'freq': [],
+            'gradx': [],
+            'gradu': [],
+            'gradt': [],
+            'rho': [],
+            'rk': [],
+            'sk': []
+        }
+
     # detect datatype
     prbDtype = np.promote_types(A.dtype, y.dtype)
 
@@ -259,29 +195,39 @@ cpdef np.ndarray anm_lse_r_d(
 
     cdef np.ndarray mat_eye = np.eye((L), dtype=prbDtype)
 
-    cdef np.complex128_t tauHalf = -.5 * tau
-
     cdef np.ndarray AHy = AH.dot(y)
 
-    cdef np.ndarray x = np.zeros((L, M), dtype=prbDtype)
+    cdef np.ndarray x = AHA.dot(np.random.randn(L, M).astype(prbDtype))
 
-    cdef np.ndarray t = np.zeros((M, M), dtype=prbDtype)
+    cdef np.ndarray t = np.zeros((M, M)).astype(prbDtype)
 
-    cdef np.ndarray u = np.zeros((*arr_s,), dtype=prbDtype)
+    # cdef np.ndarray u = np.random.randn(*arr_s).astype(prbDtype)
+    cdef np.ndarray u = HermToepInv(
+        np.cov(AH.dot(y)),
+        arr_d
+    )
 
-    cdef np.ndarray T = np.zeros((L + M, L + M), dtype=prbDtype)
+    cdef np.ndarray T = np.empty((L + M, L + M), dtype=prbDtype)
 
-    cdef np.ndarray Lb = np.zeros((L + M, L + M), dtype=prbDtype)
-    cdef np.ndarray Z = np.zeros((L + M, L + M), dtype=prbDtype)
-    cdef np.ndarray Zold = np.zeros((L + M, L + M), dtype=prbDtype)
+    hT = hermToep(u)
+
+    # print(T[:L, L:].shape, x[:].shape)
+    T[:L, :L] = 0.5 * (hT + hT.conj().T)
+    T[:L, L:] = x
+    T[L:, :L] = x.conj().T
+    T[L:, L:] = t
+
+    # cdef np.ndarray Lb = np.eye((L + M)).astype(prbDtype)
+    # cdef np.ndarray Z = np.eye((L + M)).astype(prbDtype)
+    # cdef np.ndarray Zold = np.eye((L + M)).astype(prbDtype)
+    cdef np.ndarray Lb = np.zeros((L + M, L + M)).astype(prbDtype)
+    cdef np.ndarray Z = np.zeros((L + M, L + M)).astype(prbDtype)
+    cdef np.ndarray Zold = np.zeros((L + M, L + M)).astype(prbDtype)
 
     cdef np.ndarray Winv = hermToepAdj(
         1.0 * np.ones(
             (L, L),
             dtype=prbDtype
-        # ) - 0.5*np.eye(
-        #     (L),
-        #     dtype=prbDtype
         ),
         u
     )
@@ -289,52 +235,50 @@ cpdef np.ndarray anm_lse_r_d(
     Winv = 1.0 / Winv
 
     e1 = np.zeros((L, L), dtype=prbDtype)
-    e1.flat[0] = - .25 * M * tau / rho
+    e1.flat[0] = 1
 
     e1 = hermToepAdj(e1, u)
-
-    u[:] = e1[:]
-
 
     cdef int ii
 
     cdef np.ndarray Zspec = np.empty(L + M, dtype=prbDtype)
     cdef np.ndarray Zbase = np.empty((L + M, L + M), dtype=prbDtype)
 
-
-    cdef np.float64_t mu = 10.0
-    cdef np.float64_t nu = 2.0
     cdef np.float64_t rk
     cdef np.float64_t sk
 
     for ii in range(num_steps):
 
         num_tm_s = tm.time()
-        t[:] = Z[L:, L:] + (1. / rho) * (Lb[L:, L:] + tauHalf)
+        t[:] = Z[L:, L:] + (1. / rho) * (
+            Lb[L:, L:] - 0.5 * tau * np.eye(M)
+        )
 
         # print(AHy[:].shape)
         # print((AHA + 2.0 * rho * mat_eye).shape)
-        # print((AHy + 2.0 * (Lb[:L, L:] + rho * Z[:L, L:]))[:].shape)
+        # print((AHy + 2.0 * (Lb[:L, L:] + rho * Z[:L, L:]))[:].shape)+
         x[:] = npl.solve(
             AHA + 2.0 * rho * mat_eye,
             AHy + 2.0 * (Lb[:L, L:] + rho * Z[:L, L:])
         )
 
         u[:] = Winv * (
-            hermToepAdj((Z[:L, :L] + (1. / rho) * Lb[:L, :L]), u) + e1
+            hermToepAdj((rho * Z[:L, :L] + Lb[:L, :L]), u)
+            - 0.25 * (tau / rho) * e1
         )
 
         hT = hermToep(u)
 
         # print(T[:L, L:].shape, x[:].shape)
-        T[:L, :L] = 0.5 * (hT + hT.conj().T)
+        T[:L, :L] = hT
         T[:L, L:] = x
         T[L:, :L] = x.conj().T
         T[L:, L:] = t
 
-        Zspec[:], Zbase[:] = npl.eigh(T - (2. / rho) * Lb)
+        Zspec[:], Zbase[:] = npl.eigh(T - (1. / rho) * Lb)
 
-        arrPos = (Zspec > 0)
+        ZspecNorm = alpha * npl.norm(Zspec)
+        arrPos = (Zspec > ZspecNorm)
 
         Zold[:] = Z[:]
         Z = Zbase[:, arrPos].dot((Zspec[arrPos] * Zbase[:, arrPos].conj()).T)
@@ -343,13 +287,16 @@ cpdef np.ndarray anm_lse_r_d(
         Lb += rho * (Z - T)
         Lb = 0.5 * (Lb + Lb.T.conj())
 
-        rk = np.linalg.norm(Zspec[Zspec<=0])
-        sk = np.linalg.norm(Z - Zold)
+        rk = npl.norm(Zspec[Zspec<=ZspecNorm]) / np.sqrt(Zspec[:].shape[0])
+        sk = npl.norm(Z - Zold) / np.sqrt(
+            Z[:].shape[0] * Z[:].shape[1]
+        )
 
-        if rk > (mu * sk):
-            rho *= nu
-        elif sk > (mu * rk):
-            rho /= nu
+        if adaptive:
+            if rk > (mu * sk):
+                rho *= nu
+            elif sk > (mu * rk):
+                rho /= np.sqrt(nu)
 
         if verbose:
             print(
@@ -365,5 +312,31 @@ cpdef np.ndarray anm_lse_r_d(
                 "Current dual error is %f" % sk
             )
 
+        if debug:
+            callback_vals['err'].append(callback(hT)[0])
+            callback_vals['freq'].append(callback(hT)[1])
+            callback_vals['gradx'].append(
+                npl.norm(0.5 * (AHA.dot(x)
+                - AH.dot(y)
+                - Lb[:L, L:]
+                - rho * (Z[:L, L:] - x)))
+            )
+            callback_vals['gradu'].append(npl.norm(
+                0.5 * tau * e1
+                - hermToepAdj((rho * Z[:L, :L] + Lb[:L, :L]), u)
+                + rho * u * (1.0 / Winv)
+            ))
+            callback_vals['gradt'].append(npl.norm(
+                0.5 * tau * np.eye(M)
+                - Lb[L:, L:]
+                - rho * (Z[L:, L:] - t)
+            ))
+            callback_vals['rk'].append(rk)
+            callback_vals['sk'].append(sk)
+            callback_vals['rho'].append(rho)
 
-    return hermToep(u)
+
+    if debug:
+        return (hermToep(u), callback_vals)
+    else:
+        return (hermToep(u), (0,0))
