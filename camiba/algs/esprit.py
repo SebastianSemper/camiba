@@ -152,15 +152,11 @@ def r_d(mat_cov, arr_d, num_s):
                 rcond=None
             )[0]
         )
-
-        arr_res[:, ii] = np.mod(
-            np.angle(
+        arr_res[:, ii] = np.angle(
                 npl.eigvals(
                     lst_Phi_hat[ii]
                 )
-            ) / (2 * np.pi),
-            1
-        )
+            )
 
     return arr_res
 
