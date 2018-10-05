@@ -67,8 +67,8 @@ ext_modules = [
 
 setup(
     name='camiba',
-    version='0.1.1',
-    release='0.1.1',
+    version='0.1.2',
+    release='0.1.2',
     author='Sebastian Semper',
     author_email='sebastian.semper@tu-ilmenau.de',
     license='LGPL3',
