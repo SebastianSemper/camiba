@@ -200,7 +200,7 @@ class Scenario:
         """
         return self._algo(self._mat_A, arr_b, **args)
 
-    def pipeline(self, arr_x):
+    def pipeline(self, arr_x, args):
         """
         Transform to measurment
 
@@ -221,7 +221,7 @@ class Scenario:
         """
         arr_y = self.to_signal(arr_x)
         arr_b = self.compress(arr_y)
-        return self.recover(arr_b)
+        return self.recover(arr_b, args)
 
     def phase_trans_rec(self,
                         num_s,
