@@ -26,7 +26,23 @@ class Scenario:
     represented by an algorithm.
     """
 
-    def __init__(self, mat_D, mat_C, algo):
+    @property
+    def mat_C(self):
+        return self._mat_C
+
+    @property
+    def mat_D(self):
+        return self._mat_D
+
+    @property
+    def algo(self):
+        return self._algo
+
+    @property
+    def name(self):
+        return self._name
+
+    def __init__(self, mat_D, mat_C, algo, name):
         """
             CS Scenario Constructor
 
@@ -52,6 +68,7 @@ class Scenario:
         self._mat_A = mat_C.dot(mat_D)
 
         self._algo = algo
+        self._name = name
 
     def gen_sparse(self, num_s, entries=[], do_complex=False):
         """
@@ -267,9 +284,11 @@ class Scenario:
 
         Returns
         -------
-        ndarray
-            the compressed measurement
+        dict
+            dictionary with same keys as dct_fun_compare with the results
         """
+
+        # import matplotlib.pyplot as plt
 
         # dictionary of result with keys from dct_fun_compare
         dct_res = {}
@@ -291,6 +310,10 @@ class Scenario:
 
                 # do reconstruction
                 arrXEst = self.recover(arrB, args)
+                #
+                # plt.plot(np.abs(arrX))
+                # plt.plot(np.abs(arrXEst))
+                # plt.show()
 
                 # apply all the comparison functions and store results
                 for kk in dct_res.items():
