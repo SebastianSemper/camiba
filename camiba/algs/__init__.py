@@ -51,5 +51,6 @@ from .admm import *
 from .iht import *
 from .irls import *
 from .ista import *
+from .fista import *
 from .omp import *
 from .esprit import *

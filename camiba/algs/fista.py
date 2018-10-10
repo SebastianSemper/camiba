@@ -80,5 +80,7 @@ def recover(mat_A, arr_b, x_init, num_lambda, num_steps):
 
         num_alpha_old = num_alpha
         num_alpha = 0.5 * (1.0 + np.sqrt(1.0 + 4.0 * num_alpha ** 2))
-        arr_y = arr_x + ((num_alpha_old - 1.0) / num_alpha) * (arr_x - arr_x_old)
+        arr_y = (
+            arr_x + ((num_alpha_old - 1.0) / num_alpha) * (arr_x - arr_x_old)
+        )
     return arr_x

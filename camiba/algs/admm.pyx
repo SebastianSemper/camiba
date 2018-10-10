@@ -71,7 +71,7 @@ def bpdn_1d(A, b, x_init, rho, alpha, num_steps):
     ndarray
         approximated solution to BPDN
     """
-    num_M = A.shape
+    num_M = A.shape[1]
 
     x = np.zeros(num_M)
     z = np.copy(x_init)

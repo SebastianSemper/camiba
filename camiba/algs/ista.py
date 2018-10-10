@@ -55,7 +55,7 @@ def recover(mat_A, arr_b, x_init, num_lambda, num_steps):
     arr_x = np.copy(x_init)
 
     # estimate optimal step size
-    num_max_ev = npl.svd((mat_A.conj().T).dot(mat_A), compute_uv=0)[0] * 2
+    num_max_ev = npl.svd(mat_A, compute_uv=0)[0] ** 2
 
     # do the iteration
     num_t = 1.0/num_max_ev
@@ -65,7 +65,9 @@ def recover(mat_A, arr_b, x_init, num_lambda, num_steps):
         arr_residual = mat_A.dot(arr_x) - arr_b
         residual = npl.norm(arr_residual)
 
+        print(residual, num_max_ev)
+
         arr_x = soft_thrshld(
-            arr_x - 2*num_t * (mat_A.conj().T).dot(arr_residual),
-            num_t * num_lambda)
+            arr_x - num_t * (mat_A.conj().T).dot(arr_residual),
+            num_t * num_lambda * 0.5)
     return arr_x
