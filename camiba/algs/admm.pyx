@@ -112,7 +112,9 @@ cpdef anm_lse_r_d(
     bint adaptive=False,
     bint verbose=False,
     bint debug=False,
-    callback=None
+    callback=None,
+    init=False,
+    u_init=None
 ):
 
     """
@@ -167,8 +169,7 @@ cpdef anm_lse_r_d(
     # debugging
     if debug:
         callback_vals = {
-            'err': [],
-            'freq': [],
+            'est': [],
             'gradx': [],
             'gradu': [],
             'gradt': [],
@@ -197,15 +198,17 @@ cpdef anm_lse_r_d(
 
     cdef np.ndarray AHy = AH.dot(y)
 
-    cdef np.ndarray x = AHA.dot(np.random.randn(L, M).astype(prbDtype))
+    cdef np.ndarray x = np.random.randn(L, M) + 1j * np.random.randn(L, M)
 
-    cdef np.ndarray t = np.zeros((M, M)).astype(prbDtype)
+    cdef np.ndarray t = np.random.randn(M, M) + 1j * np.random.randn(M, M)
 
-    # cdef np.ndarray u = np.random.randn(*arr_s).astype(prbDtype)
-    cdef np.ndarray u = HermToepInv(
-        np.cov(AH.dot(y)),
-        arr_d
-    )
+    cdef np.ndarray u = np.random.randn(*arr_s) + 1j * np.random.randn(*arr_s)
+    if init:
+        u = HermToepInv(u_init, arr_d)
+    # cdef np.ndarray u = HermToepInv(
+    #     np.cov(AH.dot(y)),
+    #     arr_d
+    # )
 
     cdef np.ndarray T = np.empty((L + M, L + M), dtype=prbDtype)
 
@@ -254,9 +257,6 @@ cpdef anm_lse_r_d(
             Lb[L:, L:] - 0.5 * tau * np.eye(M)
         )
 
-        # print(AHy[:].shape)
-        # print((AHA + 2.0 * rho * mat_eye).shape)
-        # print((AHy + 2.0 * (Lb[:L, L:] + rho * Z[:L, L:]))[:].shape)+
         x[:] = npl.solve(
             AHA + 2.0 * rho * mat_eye,
             AHy + 2.0 * (Lb[:L, L:] + rho * Z[:L, L:])
@@ -264,13 +264,12 @@ cpdef anm_lse_r_d(
 
         u[:] = Winv * (
             hermToepAdj((rho * Z[:L, :L] + Lb[:L, :L]), u)
-            - 0.25 * (tau / rho) * e1
+            - 0.5 * (tau / rho) * e1
         )
 
         hT = hermToep(u)
 
-        # print(T[:L, L:].shape, x[:].shape)
-        T[:L, :L] = hT
+        T[:L, :L] = 0.5 * (hT + hT.conj().T)
         T[:L, L:] = x
         T[L:, :L] = x.conj().T
         T[L:, L:] = t
@@ -295,8 +294,10 @@ cpdef anm_lse_r_d(
         if adaptive:
             if rk > (mu * sk):
                 rho *= nu
+                print("Increasing rho to %f" % (rho))
             elif sk > (mu * rk):
-                rho /= np.sqrt(nu)
+                rho /= nu
+                print("Decreasing rho to %f" % (rho))
 
         if verbose:
             print(
@@ -313,8 +314,9 @@ cpdef anm_lse_r_d(
             )
 
         if debug:
-            callback_vals['err'].append(callback(hT)[0])
-            callback_vals['freq'].append(callback(hT)[1])
+            callback_vals['est'].append(callback(hT, ii))
+            # callback_vals['err'].append(callback(hT)[0])
+            # callback_vals['freq'].append(callback(hT)[1])
             callback_vals['gradx'].append(
                 npl.norm(0.5 * (AHA.dot(x)
                 - AH.dot(y)

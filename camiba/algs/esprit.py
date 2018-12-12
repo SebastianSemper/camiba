@@ -48,64 +48,6 @@ def one_d(mat_cov, num_s):
     return phi
 
 
-def smoothing(arr_y, arr_d, arr_p):
-    """
-    R-dimensional smoothing for single snapshot ESPRIT
-
-    Parameters
-    ----------
-
-    arr_y : ndarray
-        array containing the measurements
-    arr_d : ndarray
-        array containing the size of each dimension
-    arr_k : ndarray
-        array containing the block advance in each dimension
-
-    Returns
-    -------
-    ndarray
-    generated measurements
-    """
-
-    arr_l = np.empty_like(arr_d)
-    arr_k = np.empty_like(arr_d)
-
-    for ii in range(arr_d.shape[0]):
-        arr_l[ii] = _find_block_length(arr_d[ii], arr_p[ii])
-        arr_k[ii] = int((arr_d[ii] - arr_l[ii]) / arr_p[ii] + 1)
-
-    lst_y = []
-
-    smoothing_rec(
-        arr_y.reshape((*arr_d,)),
-        arr_p,
-        arr_k,
-        arr_l,
-        lst_y,
-        0
-        )
-
-    return (np.array(lst_y), arr_l)
-
-
-def smoothing_rec(arr_y, arr_p, arr_k, arr_l, lst_y, axis):
-    if arr_p.shape[0] == 0:
-        lst_y.append(np.copy(arr_y).reshape((-1)))
-    else:
-        for ii in range(arr_k[0]):
-            arr_z = np.swapaxes(arr_y, 0, axis)
-            smoothing_rec(
-                arr_z[ii*arr_p[0]:(ii*arr_p[0] + arr_l[0]), :],
-                arr_p[1:],
-                arr_k[1:],
-                arr_l[1:],
-                lst_y,
-                axis+1
-            )
-
-
-
 def r_d(mat_cov, arr_d, num_s):
     """
         R-dimensional ESPRIT
@@ -128,10 +70,6 @@ def r_d(mat_cov, arr_d, num_s):
     # get the signal subspace
     mat_U, _, _ = npl.svd(mat_cov)
 
-    # list of estimated U
-    lst_Phi_hat = []
-    lst_U_hat = []
-
     # extract the number of dimensions
     num_r = len(arr_d)
 
@@ -142,21 +80,23 @@ def r_d(mat_cov, arr_d, num_s):
     # mat_U, arr_S, mat_V = npl.svd(mat_cov)
     mat_subsel_1, mat_subsel_2 = _build_subsel(arr_d)
 
-    for ii, dd in enumerate(arr_d):
+    lst_Psi = []
 
-        # iterative solve the least squares problems
-        lst_Phi_hat.append(
-            npl.lstsq(
-                mat_subsel_1[ii].dot(mat_U[:, :num_s]),
-                mat_subsel_2[ii].dot(mat_U[:, :num_s]),
-                rcond=None
-            )[0]
-        )
+    for ii, dd in enumerate(arr_d):
         arr_res[:, ii] = np.angle(
                 npl.eigvals(
-                    lst_Phi_hat[ii]
+                    npl.lstsq(
+                        mat_subsel_1[ii].dot(mat_U[:, :num_s]),
+                        mat_subsel_2[ii].dot(mat_U[:, :num_s]),
+                        rcond=None
+                    )[0]
                 )
             )
+        lst_Psi.append(npl.lstsq(
+            mat_subsel_1[ii].dot(mat_U[:, :num_s]),
+            mat_subsel_2[ii].dot(mat_U[:, :num_s]),
+            rcond=None
+        )[0])
 
     return arr_res
 

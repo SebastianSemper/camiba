@@ -26,6 +26,11 @@ ADMM
 .. automodule:: camiba.algs.admm
     :members:
 
+ESPRIT
+-----
+.. automodule:: camiba.algs.esprit
+    :members:
+
 IHT
 ---
 .. automodule:: camiba.algs.iht
@@ -41,6 +46,16 @@ ISTA
 .. automodule:: camiba.algs.ista
     :members:
 
+FISTA
+-----
+.. automodule:: camiba.algs.fista
+    :members:
+
+LASSO
+-----
+.. automodule:: camiba.algs.lasso
+    :members:
+
 OMP
 ---
 .. automodule:: camiba.algs.omp
@@ -48,9 +63,10 @@ OMP
 """
 
 from .admm import *
+from .esprit import *
 from .iht import *
 from .irls import *
 from .ista import *
 from .fista import *
+from .lasso import *
 from .omp import *
-from .esprit import *
