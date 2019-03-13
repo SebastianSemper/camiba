@@ -26,6 +26,7 @@ import os.path
 import numpy as np
 import numpy.random as npr
 import numpy.linalg as npl
+import scipy.linalg as spl
 from .basic import *
 
 
@@ -37,6 +38,144 @@ def sq_sum_c(x):
 def sq_sum(x):
     """speeds up norm calculation -- real case"""
     return np.sum(x*x)
+
+
+def stochastic_subspace_packing(
+    num_m: int,
+    num_N: int,
+    num_k: int,
+    num_batch_size: int,
+    num_alpha: float = 1e-5,
+    num_stop_eps: float = 1e-4,
+    num_stop_steps: int = 1e4
+) -> np.ndarray:
+    """Short summary.
+
+    Parameters
+    ----------
+    num_m : int
+        Description of parameter `num_m`.
+    num_N : int
+        Description of parameter `num_N`.
+    num_k : int
+        Description of parameter `num_k`.
+    num_stop_eps : float
+        Description of parameter `num_eps`.
+    num_stop_steps : int
+        Description of parameter `num_steps`.
+
+    Returns
+    -------
+    np.ndarray
+        Description of returned object.
+
+    """
+
+    mat_X = proj_sphere(np.random.randn(num_m, num_N))
+    mat_X0 = np.copy(mat_X)
+
+    num_eps = 2 * num_stop_eps
+    num_steps = 0
+
+    from scipy.special import comb
+    from itertools import combinations
+
+    while ((num_eps > num_stop_eps) and (num_steps < num_stop_steps)):
+
+        num_current_k = num_k #npr.randint(1, num_k, 1)
+
+        arr_subsel = npr.choice(
+            int(comb(num_N, num_k)), num_batch_size + 1, replace=False
+        )
+
+        # X_1, .., X_n
+        arr_all_ind = np.array(list(combinations(range(num_N), num_k)))[arr_subsel[:], :]
+
+        arr_compare_ind = arr_all_ind[:-1, :]
+
+        # X
+        arr_current_ind = arr_all_ind[-1, :]
+
+        # extract base of the currently selected subspace
+        mat_current_space = mat_X0[:, arr_current_ind]
+
+        # generate the orthogonal projector
+        # mat_current_proj = mat_current_space.dot(
+        #     npl.pinv(mat_current_space)
+        # )
+        mat_current_U, mat_current_Sigma, mat_current_V = npl.svd(
+            mat_current_space, full_matrices=False
+        )
+
+        # print(mat_current_space.shape)
+        #
+        #
+        mat_H = np.zeros((num_m, num_k))
+
+        # iterate through the spaces to compare to
+        for bb in range(num_batch_size):
+
+            # fix the base of the current subspace
+            mat_batch_space = mat_X0[:, arr_compare_ind[bb]]
+
+            # print(mat_current_space.T.dot(mat_batch_space))
+
+            # generate the orthogonal projector
+            # mat_batch_proj = mat_batch_space.dot(
+            #     npl.pinv(mat_batch_space)
+            # )
+
+            mat_batch_U, mat_batch_Sigma, mat_batch_V = npl.svd(
+                mat_batch_space, full_matrices=False
+            )
+
+            # print(mat_batch_U.dtype)
+            # print(mat_current_Sigma)
+
+            # print(mat_current_U.shape, mat_batch_U.shape)
+
+            # mat_tangent_U = spl.logm(mat_current_U.dot(mat_batch_U.T))
+            mat_tangent_U, mat_tangent_Sigma, mat_tangent_V = npl.svd(
+                (np.eye(num_m) - mat_current_U.dot(mat_current_U.T)).dot(
+                    mat_batch_U.dot(npl.pinv(mat_current_U.T.dot(mat_batch_U)))
+                ),
+                full_matrices=False
+            )
+
+            zero_ind = (mat_tangent_Sigma > 1e-10)
+            tan_diag = np.zeros_like(mat_tangent_Sigma)
+            tan_diag[zero_ind] = np.arctan(
+                mat_tangent_Sigma[zero_ind]
+            )
+
+            mat_log = mat_tangent_U.dot(
+                np.diag(tan_diag).dot(mat_tangent_V.T)
+            )
+
+            mat_log_norm = np.sum(mat_log ** 2)
+
+            if mat_log_norm > 1e-14:
+                mat_H += mat_log / mat_log_norm
+            else:
+                print("boo")
+
+
+        mat_H_U, mat_H_Sigma, mat_H_V = npl.svd(
+            -num_alpha * mat_H,
+            full_matrices=False
+        )
+
+        mat_Exp = mat_current_U.dot(
+            mat_H_V.dot(np.diag(np.cos(mat_H_Sigma)))
+        ) + mat_H_U.dot(np.diag(np.sin(mat_H_Sigma)))
+
+        mat_X0[:, arr_current_ind] = mat_Exp
+
+        if not (num_steps % 100):
+            print(num_steps)
+        num_steps += 1
+
+    return (mat_X, mat_X0)
 
 
 def drawTwo(
@@ -67,9 +206,9 @@ def drawTwo(
 
     print('$MINPOT$ Before optimization')
     print('$MINPOT$ Mutual coherence : %f - coherence of first factor: %f - coherence of second factor: %f' %
-          (csg.mut_coh(mat_X1[1, :, :], mat_X1[0, :, :]), csg.coh(mat_X1[1, :, :]), csg.coh(mat_X1[0, :, :])))
+          (mut_coh(mat_X1[1, :, :], mat_X1[0, :, :]), coh(mat_X1[1, :, :]), coh(mat_X1[0, :, :])))
     print('$MINPOT$ coherence of KRP: %f' %
-          (csg.coh(krp.prod(mat_X1[0, :, :], mat_X1[1, :, :]))))
+          (coh(krp.prod(mat_X1[0, :, :], mat_X1[1, :, :]))))
     while (sum(tr) > num_eps) and (num_steps < num_max_steps):
 
         mat_F.fill(0)
@@ -110,7 +249,7 @@ def drawTwo(
             mat_F[:, ii] -= np.sum(d1+d2+d3+d4, 1)
 
         # calc next iterations
-        mat_X2[sw, :, :] = csg.projSphere(mat_X1[sw, :, :] - num_h * mat_F)
+        mat_X2[sw, :, :] = proj_sphere(mat_X1[sw, :, :] - num_h * mat_F)
 
         # calc difference
         tr = list(map(
@@ -122,9 +261,9 @@ def drawTwo(
 
     print('$MINPOT$ After optimization')
     print('$MINPOT$ Mutual coherence : %f - coherence of first factor: %f - coherence of second factor: %f' %
-          (csg.mut_coh(mat_X1[1, :, :], mat_X1[0, :, :]), csg.coh(mat_X1[1, :, :]), csg.coh(mat_X1[0, :, :])))
+          (mut_coh(mat_X1[1, :, :], mat_X1[0, :, :]), coh(mat_X1[1, :, :]), coh(mat_X1[0, :, :])))
     print('$MINPOT$ coherence of KRP: %f' %
-          (csg.coh(krp.prod(mat_X1[0, :, :], mat_X1[1, :, :]))))
+          (coh(krp.prod(mat_X1[0, :, :], mat_X1[1, :, :]))))
     return mat_X1
 
 
@@ -152,8 +291,8 @@ def drawSeed(mat_X, eps, h, steps=0):
 
     # init variable step width
     arr_h = num_h*np.ones(num_m)
-    num_h_min = 2**(-4)*num_h
-    num_h_max = 2**(4)*num_h
+    num_h_min = 2**(-5)*num_h
+    num_h_max = 2**(5)*num_h
 
     # calc first norm
     tr = npl.norm(X0 - X1, 'fro')
@@ -200,7 +339,7 @@ def drawSeed(mat_X, eps, h, steps=0):
         F0 = F1
 
         # calc next iterations
-        X1 = csg.projSphere(X0 - arr_h*F1)
+        X1 = proj_sphere(X0 - arr_h*F1)
         if num_steps % 100 == 0:
             tr = npl.norm(X0 - X1, 'fro')
             print(num_steps, tr, (time.time()-s)/(num_steps+1))
@@ -211,14 +350,19 @@ def drawSeed(mat_X, eps, h, steps=0):
     return X0
 
 
-def draw(num_n, num_m, num_eps, num_h):
-    """applies the potential minimizing algorithm
-    for given configuration size num_n x num_m.
-    another stopping criterion has to be supplied together with a
-    step length"""
-    print('$MINPOT$ Starting minimizing a potential..')
+def drawOptMatrix(
+    num_n,
+    num_m,
+    num_eps,
+    num_h,
+    numMaxSteps=2500,
+    verbose=False
+):
+
+    if verbose:
+        print('$MINPOT$ Starting minimizing a potential..')
     # init first draw
-    X0 = csg.projSphere(npr.randn(num_n, num_m))
+    X0 = proj_sphere(npr.randn(num_n, num_m))
     X1 = np.zeros((num_n, num_m))
 
     # init force matrcies
@@ -236,7 +380,8 @@ def draw(num_n, num_m, num_eps, num_h):
     num_steps = 0
 
     s = time.time()
-    while tr > num_eps:
+    while num_steps < numMaxSteps:
+    # while ((tr > num_eps) and num_steps < numMaxSteps):
 
         # calc force matrix
         F1.fill(0)
@@ -267,17 +412,26 @@ def draw(num_n, num_m, num_eps, num_h):
             # sum everything together and add it to force
             F1[:, ii] -= np.sum(d1+d2, 1)
 
-            arr_h[ii] = min(num_h_max, max(arr_h[ii]*2**(np.inner(F0[:, ii],
-                                                                  F1[:, ii])/(npl.norm(F0[:, ii])*npl.norm(F1[:, ii]))), num_h_min))
+            arr_h[ii] = min(
+                num_h_max,
+                max(
+                    arr_h[ii]*2**(
+                        np.inner(F0[:, ii], F1[:, ii])/(
+                            npl.norm(F0[:, ii]) * npl.norm(F1[:, ii])
+                        )
+                    ),
+                    num_h_min
+                )
+            )
 
         # buffer force to calc next step width
         F0 = F1
 
         # calc next iterations
-        X1 = csg.projSphere(X0 - arr_h*F1)
+        X1 = proj_sphere(X0 - arr_h*F1)
 
         # some output
-        if num_steps % 100 == 0:
+        if (num_steps % 100 == 0) and verbose:
             tr = npl.norm(X0 - X1, 'fro')
             print("$MINPOT$ Step %d - Correction - %f - %f" %
                   (num_steps, tr, (time.time() - s) / (num_steps + 1)))
@@ -286,7 +440,8 @@ def draw(num_n, num_m, num_eps, num_h):
         X0 = X1
         num_steps += 1
 
-    print('$MINPOT$ Done minimizing a potential..')
+    if verbose:
+        print('$MINPOT$ Done minimizing a potential..')
     return X0
 
 
@@ -357,7 +512,7 @@ def drawComplexSeed(mat_X, num_eps, num_h, steps=0):
         F0 = np.copy(F1)
 
         # calc next iterations
-        X1 = csg.projSphere(X0 - arr_h*F1)
+        X1 = proj_sphere(X0 - arr_h*F1)
 
         # info output
         if num_steps % 50 == 0:
@@ -392,7 +547,7 @@ def drawComplex(
     arr_phi_exp = np.exp(1j*arr_phi)
 
     # init first iteration
-    X0 = csg.projSphere(npr.randn(num_n, num_m) + 1j*npr.randn(num_n, num_m))
+    X0 = proj_sphere(npr.randn(num_n, num_m) + 1j*npr.randn(num_n, num_m))
     X1 = np.zeros((num_n, num_m), dtype='complex')
 
     # init forces
@@ -443,13 +598,13 @@ def drawComplex(
         F0 = np.copy(F1)
 
         # calc next iterations
-        X1 = csg.projSphere(X0 + arr_h*F1)
+        X1 = proj_sphere(X0 + arr_h*F1)
 
         # temporary progress
         if num_steps % 2 == 0:
             tr = npl.norm(X0 - X1, 'fro')
             print("%d,%f,%f,%f" % (num_steps, tr,
-                                   (time.time() - s) / (num_steps + 1), csg.coh(X1)))
+                                   (time.time() - s) / (num_steps + 1), coh(X1)))
 
         # save last iteration
         X0 = np.copy(X1)
