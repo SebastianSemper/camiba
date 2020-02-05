@@ -198,13 +198,14 @@ def normGram(
 
 def same_supp(
     x1,
-    x2
+    x2,
+    tol=1e-10
 ):
     """
         Check if two vectors have the same support
     """
 
-    d = (1*(x1 != 0)) - (1*(x2 != 0))
+    d = (1*(np.abs(x1) > 1e-10)) - (1*(np.abs(x2) > 1e-10))
     return bool(1 - ((np.sum(np.abs(d))) > 0))
 
 

@@ -35,24 +35,20 @@ def LARS(
     # eq. (2.9)
     num_C_hat = np.max(np.abs(vec_c_hat))
 
-    # eq. (2.9)
-    set_A = np.isclose(np.abs(vec_c_hat), num_C_hat)
-    set_A_bar = np.logical_not(set_A)
-
     vec_beta_hat = np.zeros(mat_X.shape[1])
-    vec_beta_hat[set_A] = np.linalg.lstsq(mat_X[:, set_A], vec_y)[0]
     vec_mu_hat = mat_X.dot(vec_beta_hat)
 
-    print(np.linalg.norm(vec_y))
-    print(np.sum(set_A))
-    print(np.linalg.norm(vec_y - vec_mu_hat))
-    print(np.linalg.norm(vec_y - mat_X.dot(vec_beta_hat)))
-
     for kk in range(num_steps):
+        # eq (2.8)
         vec_c_hat = mat_X.T.conj().dot(vec_y - vec_mu_hat)
 
         # eq. (2.9)
         num_C_hat = np.max(np.abs(vec_c_hat))
+
+        # eq. (2.9)
+        set_A = np.isclose(np.abs(vec_c_hat), num_C_hat)
+        set_A_bar = np.logical_not(set_A)
+
 
         # eq. (2.10)
         vec_s = np.sign(vec_c_hat[set_A])

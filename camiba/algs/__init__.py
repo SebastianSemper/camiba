@@ -26,6 +26,11 @@ ADMM
 .. automodule:: camiba.algs.admm
     :members:
 
+Basis Pursuit
+-------------
+.. automodule:: camiba.algs.bp
+    :members:
+
 ESPRIT
 -----
 .. automodule:: camiba.algs.esprit
@@ -63,6 +68,7 @@ OMP
 """
 
 from .admm import *
+from .bp import *
 from .esprit import *
 from .iht import *
 from .irls import *
