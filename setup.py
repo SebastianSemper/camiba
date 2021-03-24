@@ -48,7 +48,7 @@ sysconfig.get_config_vars()['CONFIGURE_LDFLAGS'] = ''
 sysconfig.get_config_vars()['LDFLAGS'] = ''
 sysconfig.get_config_vars()['PY_LDFLAGS'] = ''
 
-lstIncludes = [numpy.get_include()]
+lstIncludes = [numpy.get_include(), '/opt/intel/intelpython3/include/python3.7m']
 
 ext_modules = [
     Extension(

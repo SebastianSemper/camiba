@@ -22,7 +22,6 @@ min ||x||_0 s.t. Ax = b
 for given matrix A and vector b and it is described and analyzed in [OMP]_.
 """
 
-import matplotlib.pyplot as plt
 import numpy as np
 import numpy.linalg as npl
 from ..linalg.basic import aB

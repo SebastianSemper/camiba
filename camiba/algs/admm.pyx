@@ -203,6 +203,7 @@ cpdef anm_lse_r_d(
     cdef np.ndarray t = np.random.randn(M, M) + 1j * np.random.randn(M, M)
 
     cdef np.ndarray u = np.random.randn(*arr_s) + 1j * np.random.randn(*arr_s)
+    # cdef np.ndarray u = np.zeros(arr_s, dtype=prbDtype)
     if init:
         u = HermToepInv(u_init, arr_d)
     # cdef np.ndarray u = HermToepInv(
@@ -218,7 +219,7 @@ cpdef anm_lse_r_d(
     T[:L, :L] = 0.5 * (hT + hT.conj().T)
     T[:L, L:] = x
     T[L:, :L] = x.conj().T
-    T[L:, L:] = t
+    T[L:, L:] = 0.5 * (t + t.conj().T)
 
     # cdef np.ndarray Lb = np.eye((L + M)).astype(prbDtype)
     # cdef np.ndarray Z = np.eye((L + M)).astype(prbDtype)
@@ -272,7 +273,7 @@ cpdef anm_lse_r_d(
         T[:L, :L] = 0.5 * (hT + hT.conj().T)
         T[:L, L:] = x
         T[L:, :L] = x.conj().T
-        T[L:, L:] = t
+        T[L:, L:] = 0.5 * (t + t.conj().T)
 
         Zspec[:], Zbase[:] = npl.eigh(T - (1. / rho) * Lb)
 
@@ -294,10 +295,12 @@ cpdef anm_lse_r_d(
         if adaptive:
             if rk > (mu * sk):
                 rho *= nu
-                print("Increasing rho to %f" % (rho))
+                if verbose:
+                  print("Increasing rho to %f" % (rho))
             elif sk > (mu * rk):
                 rho /= nu
-                print("Decreasing rho to %f" % (rho))
+                if verbose:
+                  print("Decreasing rho to %f" % (rho))
 
         if verbose:
             print(
@@ -341,4 +344,4 @@ cpdef anm_lse_r_d(
     if debug:
         return (hermToep(u), callback_vals)
     else:
-        return (hermToep(u), (0,0))
+        return (hermToep(u), npl.norm(A.dot(x) - y) ** 2)
