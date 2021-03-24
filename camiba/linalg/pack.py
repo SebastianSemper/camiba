@@ -129,7 +129,7 @@ def drawTwo(
     return mat_X1
 
 
-def drawSeed(mat_X, eps, h, steps=0):
+def drawSeed(mat_X, eps, num_h, steps=0):
     """applies the potential minimizing algorithm
     for a given initial configuration mat_X a given amount of steps.
     another stopping criterion has to be supplied together with a
@@ -202,7 +202,7 @@ def drawSeed(mat_X, eps, h, steps=0):
 
         # calc next iterations
         X1 = proj_sphere(X0 - arr_h*F1)
-        if num_steps % 100 == 0:
+        if (num_steps % 100 == 0) and num_steps:
             tr = npl.norm(X0 - X1, 'fro')
             print(num_steps, tr, (time.time()-s)/(num_steps+1))
 
@@ -323,7 +323,7 @@ def drawComplexSeed(mat_X, num_eps, num_h, steps=0):
     num_res_phi = round(1.5*num_m)
     arr_phi = np.linspace(0, 2*math.pi*(1.0 - 1.0/num_res_phi), num_res_phi)
     num_d_phi = arr_phi[1]-arr_phi[0]
-
+    arr_phi_exp = np.exp(1j * arr_phi)
     # init new iteration
     X1 = np.zeros((num_n, num_m), dtype='complex')
 
@@ -347,7 +347,7 @@ def drawComplexSeed(mat_X, num_eps, num_h, steps=0):
     num_steps = 0
 
     s = time.time()
-    while (tr > eps and steps == 0) or (steps > 0 and num_steps < steps):
+    while (tr > num_eps and steps == 0) or (steps > 0 and num_steps < steps):
 
         # calc force matrix
         F1.fill(0)
@@ -377,7 +377,7 @@ def drawComplexSeed(mat_X, num_eps, num_h, steps=0):
         X1 = proj_sphere(X0 - arr_h*F1)
 
         # info output
-        if num_steps % 50 == 0:
+        if (num_steps % 50 == 0) and num_steps:
             tr = npl.norm(X0 - X1, 'fro')
             print(num_steps, tr, (time.time()-s)/(num_steps+1))
 
